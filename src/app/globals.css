@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #f7f8f4;
+  --color-surface: #ffffff;
+  --color-line: #dce3dc;
+  --color-ink: #16251e;
+  --color-muted: #4a5c50;
+  --color-accent: #205944;
+}
+
+@layer base {
+  body {
+    @apply min-h-dvh bg-canvas text-ink antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+  }
+}
