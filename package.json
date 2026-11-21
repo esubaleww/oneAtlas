@@ -10,6 +10,7 @@
     "dev": "next dev --webpack",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
+    "test:catalog": "node --test tests/catalog-api.test.mjs",
     "build": "next build --webpack",
     "start": "next start",
     "db:generate": "prisma generate",
@@ -24,7 +25,8 @@
     "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "server-only": "0.0.1"
+    "server-only": "0.0.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

@@ -21,6 +21,13 @@
 - Queried related lab, provider, offering, and benchmark records via the server-side client. Verified zero and null prices, provider-specific rates, missing results, and rejection of negative prices.
 - Prisma validation and client generation passed, along with `npm run lint`, `npm run typecheck`, and `npm run build`.
 
-## Next · Module 3 catalog APIs
+## Module 3 · Catalog APIs
 
-Start after the learning checkpoint. Build the model listing, detail, and filter endpoints on the Prisma client. Verify query validation, combined filters, provider-specific pricing, stable sorting, and pagination against PostgreSQL. The catalog browser will connect to these endpoints in Module 4.
+- Added model list, model detail, and catalog filter endpoints. Zod validates the URL parameters and bounds pagination. The server-side catalog layer owns PostgreSQL queries and decimal and date serialization.
+- Model search covers names and descriptions. Filters combine across labs, providers, types, and capabilities. PostgreSQL selects the representative offering, sorts consistently, and reads the filtered count and page from the same snapshot.
+- Seven HTTP integration tests passed against the production build and the seeded PostgreSQL database. They cover combined filters, stable pagination, provider-specific rates, zero and missing rates, benchmark details, and invalid and unknown requests.
+- Verified a `503 SERVICE_UNAVAILABLE` response from each endpoint using an unreachable database address. Lint, type checking, and the production build passed. [API contract and examples](API.md)
+
+## Next · Module 4 discovery UI
+
+Start after the learning checkpoint. Build the model explorer on the catalog endpoints with shareable URL filters, results, paging, and loading, empty, and error states. Attempt the hosted app and database smoke check if access is available.

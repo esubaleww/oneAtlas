@@ -1,6 +1,6 @@
 # OneAtlas
 
-OneAtlas is a Full Stack Engineer internship project for exploring AI models, comparing provider prices, and evaluating benchmark results in one catalog. The app shell is available at `/`. The local database now holds the demo catalog that the next modules will expose through the API and explorer.
+OneAtlas is a Full Stack Engineer internship project for exploring AI models, comparing provider prices, and evaluating benchmark results in one catalog. The app shell is available at `/`, and the catalog API serves the PostgreSQL-backed demo data.
 
 [GitHub repository](https://github.com/esubaleww/oneAtlas)
 
@@ -13,7 +13,7 @@ npm ci
 npm run dev
 ```
 
-Open [OneAtlas locally](http://localhost:3000). The shell can run independently of PostgreSQL while the API is being built.
+Open [OneAtlas locally](http://localhost:3000). Start and seed PostgreSQL to use the [catalog API](docs/API.md).
 
 ## Start and seed PostgreSQL
 
@@ -48,6 +48,8 @@ npm start
 
 `typecheck` generates the App Router types before running TypeScript. `start` serves the production build. Visit `/` for the catalog shell and `/missing-page` for the 404 screen.
 
+With the seeded database and app running, run `npm run test:catalog` to verify the catalog endpoints. [API contract and examples](docs/API.md)
+
 ## Stack and project notes
 
 - Node.js 24, Next.js 16.4.6 (App Router), and React 19.3.1.
@@ -56,5 +58,6 @@ npm start
 - The development and build scripts use Next.js's Webpack option because the Turbopack CSS worker exited early on the Windows development machine. [Next.js CLI reference](https://nextjs.org/docs/app/api-reference/cli/next)
 - PostgreSQL 18.7 and Prisma 7.10.1 with the Node.js PostgreSQL adapter. Prisma 7's self-hosted compatibility table lists PostgreSQL through major version 18. [Prisma supported databases](https://www.prisma.io/docs/orm/v7/reference/supported-databases)
 - Prisma 7.10.1 is pinned while Prisma 8 is a release candidate. [Prisma setup with Neon](https://neon.com/docs/guides/prisma)
+- Zod 4.6.7 validates catalog requests.
 
 See the [implementation plan](docs/IMPLEMENTATION_PLAN.md), [reference research](docs/RESEARCH.md), and [progress log](docs/PROGRESS.md).
