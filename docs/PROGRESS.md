@@ -13,6 +13,14 @@
 - Headless Chrome verified the production home and 404 responses, the link back to the catalog, keyboard focus through the skip link, and no horizontal overflow at 390 px and 320 px.
 - Turbopack's CSS worker exited early on Windows. The development and build scripts use Next.js's supported Webpack mode.
 
-## Next · Module 2 database
+## Module 2 · Database
 
-Start after the learning checkpoint. Set up local PostgreSQL, add the Prisma schema and migration, connect through a server-only client, and verify a repeatable seed against the database. Docker CLI and Compose are installed on the development machine. Docker Desktop's Linux engine was stopped when checked.
+- Set up PostgreSQL 18.7 in Docker Compose with a loopback port and a named volume. Added the six-table catalog schema, an initial migration, and a server-only Prisma 7.10.1 client.
+- Seeded five demo labs, five providers, 30 models, 40 offerings, three benchmark definitions, and 45 results in a single transaction. The seed validates the fixtures and skips existing rows on reruns.
+- Applied the migration to the local PostgreSQL container. Prisma migration status reports the schema is up to date. The second seed inserted zero rows and snapshots of the six catalog tables matched.
+- Queried related lab, provider, offering, and benchmark records via the server-side client. Verified zero and null prices, provider-specific rates, missing results, and rejection of negative prices.
+- Prisma validation and client generation passed, along with `npm run lint`, `npm run typecheck`, and `npm run build`.
+
+## Next · Module 3 catalog APIs
+
+Start after the learning checkpoint. Build the model listing, detail, and filter endpoints on the Prisma client. Verify query validation, combined filters, provider-specific pricing, stable sorting, and pagination against PostgreSQL. The catalog browser will connect to these endpoints in Module 4.

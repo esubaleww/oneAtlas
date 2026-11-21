@@ -1,0 +1,21 @@
+name: oneatlas
+
+services:
+  db:
+    image: postgres:18.7
+    environment:
+      POSTGRES_DB: oneatlas
+      POSTGRES_USER: oneatlas
+      POSTGRES_PASSWORD: oneatlas_dev
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "oneatlas", "-d", "oneatlas"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  postgres_data:

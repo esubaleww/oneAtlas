@@ -1,6 +1,6 @@
 # OneAtlas
 
-OneAtlas is a Full Stack Engineer internship project for exploring AI models, comparing provider prices, and evaluating benchmark results in one catalog. The current milestone provides the app shell and a catalog setup screen at `/`.
+OneAtlas is a Full Stack Engineer internship project for exploring AI models, comparing provider prices, and evaluating benchmark results in one catalog. The app shell is available at `/`. The local database now holds the demo catalog that the next modules will expose through the API and explorer.
 
 [GitHub repository](https://github.com/esubaleww/oneAtlas)
 
@@ -13,7 +13,29 @@ npm ci
 npm run dev
 ```
 
-Open [OneAtlas locally](http://localhost:3000). The foundation runs without an environment file or a database. `.env.example` documents the local PostgreSQL connection planned for the next module.
+Open [OneAtlas locally](http://localhost:3000). The shell can run independently of PostgreSQL while the API is being built.
+
+## Start and seed PostgreSQL
+
+Use Docker Desktop with the Linux engine running. From the repository root in PowerShell, copy the local connection settings and start the database.
+
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+docker compose up -d --wait db
+npm run db:migrate
+npm run db:seed
+```
+
+If you already have an `.env`, keep it and set `DATABASE_URL` to your local database connection. The Compose service binds PostgreSQL to `127.0.0.1:5432` and mounts a named volume. `docker compose stop db` stops the container and retains the catalog. For a hosted deployment, set `DATABASE_URL_UNPOOLED` for Prisma migration and seed commands if the runtime `DATABASE_URL` is pooled.
+
+`npm ci` generates Prisma Client automatically. Run `npm run db:generate` after changing the schema, and use `npm run db:migrate:dev -- --name your_change` to create and apply a development migration. `npm run db:migrate` applies committed migrations.
+
+### Catalog structure and demo data
+
+- A lab creates models, and a model can have one offering per serving provider. Prices are nullable decimals in USD per million tokens in the demo, with separately stored input and output rates and offering context limits. A stored zero represents a free rate. `null` represents an unavailable or inapplicable rate.
+- A model can have one result per versioned benchmark definition. Results include provenance and a demo flag. Benchmark definitions store the unit, protocol, model type, and score direction.
+- Slugs identify labs, models, providers, and benchmark definitions across installs. An offering or result uses a pair of related slugs as its key. The seed validates the fixtures, inserts missing records in one transaction, and preserves existing rows across runs.
+- The seed contains 30 fictional models across five labs and five providers, 40 offerings, three benchmark definitions, and 45 results. All fixture names, prices, limits, and scores are synthetic. The demo includes free rates, missing rates, different provider prices for the same model, and models without a benchmark result.
 
 ## Verify
 
@@ -32,6 +54,7 @@ npm start
 - TypeScript 6.0.3, Tailwind CSS 4.3.5 with its PostCSS plugin, and ESLint 10.15.0 with the Next.js, React Hooks, and TypeScript plugins. The lockfile records the exact dependency tree.
 - TypeScript 6.0.3 is the latest stable release within the installed TypeScript ESLint plugin's supported range.
 - The development and build scripts use Next.js's Webpack option because the Turbopack CSS worker exited early on the Windows development machine. [Next.js CLI reference](https://nextjs.org/docs/app/api-reference/cli/next)
-- PostgreSQL and Prisma are scheduled for Module 2.
+- PostgreSQL 18.7 and Prisma 7.10.1 with the Node.js PostgreSQL adapter. Prisma 7's self-hosted compatibility table lists PostgreSQL through major version 18. [Prisma supported databases](https://www.prisma.io/docs/orm/v7/reference/supported-databases)
+- Prisma 7.10.1 is pinned while Prisma 8 is a release candidate. [Prisma setup with Neon](https://neon.com/docs/guides/prisma)
 
 See the [implementation plan](docs/IMPLEMENTATION_PLAN.md), [reference research](docs/RESEARCH.md), and [progress log](docs/PROGRESS.md).

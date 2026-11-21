@@ -1,0 +1,131 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ModelType {
+  TEXT_GENERATION
+  EMBEDDING
+}
+
+enum Modality {
+  TEXT
+  IMAGE
+  EMBEDDING
+}
+
+enum Capability {
+  REASONING
+  TOOL_CALLING
+  STRUCTURED_OUTPUT
+  VISION
+  OPEN_WEIGHTS
+  MULTILINGUAL
+}
+
+enum BillingUnit {
+  PER_MILLION_TOKENS
+}
+
+enum ScoreDirection {
+  HIGHER_IS_BETTER
+  LOWER_IS_BETTER
+}
+
+model Lab {
+  slug        String  @id
+  name        String
+  description String
+  websiteUrl  String?
+  isDemo      Boolean @default(false)
+  models      Model[]
+}
+
+model Model {
+  slug             String            @id
+  name             String
+  labSlug          String
+  lab              Lab               @relation(fields: [labSlug], references: [slug])
+  description      String
+  type             ModelType
+  inputModalities  Modality[]
+  outputModalities Modality[]
+  capabilities     Capability[]
+  contextWindow    Int?
+  maxOutputTokens  Int?
+  releasedOn       DateTime?         @db.Date
+  sourceUrl        String?
+  retrievedOn      DateTime?         @db.Date
+  isDemo           Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  offerings        ModelOffering[]
+  results          BenchmarkResult[]
+
+  @@index([labSlug])
+  @@index([type])
+  @@index([releasedOn])
+  @@index([capabilities], type: Gin)
+}
+
+model Provider {
+  slug        String          @id
+  name        String
+  description String
+  websiteUrl  String?
+  isDemo      Boolean         @default(false)
+  offerings   ModelOffering[]
+}
+
+model ModelOffering {
+  modelSlug       String
+  providerSlug    String
+  model           Model       @relation(fields: [modelSlug], references: [slug], onDelete: Cascade)
+  provider        Provider    @relation(fields: [providerSlug], references: [slug])
+  providerModelId String?
+  inputPrice      Decimal?    @db.Decimal(12, 6)
+  outputPrice     Decimal?    @db.Decimal(12, 6)
+  currency        String      @db.Char(3)
+  billingUnit     BillingUnit
+  contextWindow   Int?
+  sourceUrl       String?
+  retrievedOn     DateTime?   @db.Date
+  isDemo          Boolean     @default(false)
+
+  @@id([modelSlug, providerSlug])
+  @@index([providerSlug])
+}
+
+model Benchmark {
+  slug        String            @id
+  name        String
+  description String
+  version     String
+  protocol    String
+  unit        String
+  category    ModelType
+  direction   ScoreDirection
+  results     BenchmarkResult[]
+
+  @@unique([name, version])
+}
+
+model BenchmarkResult {
+  modelSlug     String
+  benchmarkSlug String
+  model         Model     @relation(fields: [modelSlug], references: [slug], onDelete: Cascade)
+  benchmark     Benchmark @relation(fields: [benchmarkSlug], references: [slug])
+  value         Decimal   @db.Decimal(12, 4)
+  sourceLabel   String
+  sourceUrl     String?
+  measuredOn    DateTime? @db.Date
+  isDemo        Boolean   @default(false)
+
+  @@id([modelSlug, benchmarkSlug])
+  @@index([benchmarkSlug, isDemo, value])
+}
