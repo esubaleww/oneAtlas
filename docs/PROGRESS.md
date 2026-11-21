@@ -28,6 +28,13 @@
 - Seven HTTP integration tests passed against the production build and the seeded PostgreSQL database. They cover combined filters, stable pagination, provider-specific rates, zero and missing rates, benchmark details, and invalid and unknown requests.
 - Verified a `503 SERVICE_UNAVAILABLE` response from each endpoint using an unreachable database address. Lint, type checking, and the production build passed. [API contract and examples](API.md)
 
-## Next · Module 4 discovery UI
+## Module 4 · Discovery UI
 
-Start after the learning checkpoint. Build the model explorer on the catalog endpoints with shareable URL filters, results, paging, and loading, empty, and error states. Attempt the hosted app and database smoke check if access is available.
+- Built the model explorer at `/` with search, lab and provider filters, model type and capability filters, sorting, result counts, and pagination. The table and mobile cards show demo labels and the rates and currency from the selected provider offering.
+- The explorer reads the catalog API and stores the applied query in the URL. Search submits with Enter or the Search button. Filter changes cancel pending requests, and failed results and filter options can be retried independently.
+- Chrome checks against the production build covered keyboard navigation, combined filters, provider pricing, sorting, deep links, browser back and forward, pagination, empty and invalid-query states, loading, retries, and cancellation of an older search. The mobile layout fit 390 px and 320 px without horizontal overflow.
+- Lint, type checking, the production build, and all seven catalog integration tests passed. The hosted app and database smoke test requires configured Vercel and Neon access.
+
+## Next · Module 5 model details
+
+Start after the learning checkpoint. Add model detail pages with specifications, provider offerings, benchmark results and provenance, and the unknown-model state. Connect the explorer rows to the detail pages.

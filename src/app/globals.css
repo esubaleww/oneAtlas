@@ -1,12 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-canvas: #f7f8f4;
+  --color-canvas: #f4f7f4;
   --color-surface: #ffffff;
-  --color-line: #dce3dc;
-  --color-ink: #16251e;
-  --color-muted: #4a5c50;
-  --color-accent: #205944;
+  --color-line: #dbe4de;
+  --color-panel: #f6f9f6;
+  --color-ink: #152923;
+  --color-muted: #4c6259;
+  --color-accent: #136148;
+  --color-accent-hover: #104e3b;
+  --color-accent-soft: #e5f3eb;
 }
 
 @layer base {
@@ -17,5 +20,89 @@
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 4px;
+  }
+}
+
+@layer components {
+  .catalog-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: linear-gradient(120deg, #122f28 14%, #174538 100%);
+  }
+
+  .catalog-hero::before {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    content: "";
+    background:
+      radial-gradient(circle at 80% 105%, #4b9b7070, transparent 43%),
+      repeating-radial-gradient(ellipse at 83% 125%, transparent 0 16px, #9fe0bd32 17px 18px);
+    mask-image: linear-gradient(to right, transparent 24%, black 85%);
+  }
+
+  .catalog-hero::after {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    content: "";
+    background: radial-gradient(circle, #c0f3d66b 1px, transparent 1.5px) 0 0 / 19px 19px;
+    mask-image: radial-gradient(ellipse at 87% 24%, black, transparent 37%);
+  }
+
+  .catalog-field {
+    @apply h-10 w-full min-w-0 rounded-lg border border-line bg-surface px-3 text-sm text-ink shadow-xs transition-colors hover:border-accent/55 disabled:bg-panel disabled:text-muted;
+  }
+
+  .catalog-select {
+    @apply relative block min-w-0;
+  }
+
+  .catalog-select select {
+    @apply appearance-none truncate pe-8;
+  }
+
+  .catalog-select::after {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    width: 7px;
+    height: 7px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    color: var(--color-muted);
+    content: "";
+    pointer-events: none;
+    transform: translateY(-70%) rotate(45deg);
+  }
+
+  .search-icon {
+    position: relative;
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border: 1.6px solid currentColor;
+    border-radius: 50%;
+  }
+
+  .search-icon::after {
+    position: absolute;
+    right: -5px;
+    bottom: -2px;
+    width: 6px;
+    height: 1.6px;
+    border-radius: 2px;
+    background: currentColor;
+    content: "";
+    transform: rotate(46deg);
+  }
+
+  .catalog-button {
+    @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm font-medium text-ink shadow-xs transition-colors hover:border-accent/60 hover:text-accent disabled:cursor-not-allowed disabled:border-line disabled:bg-panel disabled:text-muted disabled:opacity-65;
+  }
+
+  .catalog-button-primary {
+    @apply border-accent bg-accent text-white hover:border-accent-hover hover:bg-accent-hover hover:text-white;
   }
 }

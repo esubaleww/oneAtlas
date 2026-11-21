@@ -1,6 +1,6 @@
 # OneAtlas
 
-OneAtlas is a Full Stack Engineer internship project for exploring AI models, comparing provider prices, and evaluating benchmark results in one catalog. The app shell is available at `/`, and the catalog API serves the PostgreSQL-backed demo data.
+OneAtlas is a Full Stack Engineer internship project for exploring AI models, comparing provider prices, and evaluating benchmark results in one catalog. The model explorer at `/` reads the PostgreSQL-backed demo catalog through the app’s API.
 
 [GitHub repository](https://github.com/esubaleww/oneAtlas)
 
@@ -13,7 +13,7 @@ npm ci
 npm run dev
 ```
 
-Open [OneAtlas locally](http://localhost:3000). Start and seed PostgreSQL to use the [catalog API](docs/API.md).
+Start and seed PostgreSQL, then open [the local model explorer](http://localhost:3000). Search by model name or description, combine filters, and sort by release, context, or token rates. The URL preserves the active query and page across refresh and browser navigation. [Catalog API](docs/API.md)
 
 ## Start and seed PostgreSQL
 
@@ -46,7 +46,7 @@ npm run build
 npm start
 ```
 
-`typecheck` generates the App Router types before running TypeScript. `start` serves the production build. Visit `/` for the catalog shell and `/missing-page` for the 404 screen.
+`typecheck` generates the App Router types before running TypeScript. `start` serves the production build. Visit `/` for the explorer and `/missing-page` for the 404 screen.
 
 With the seeded database and app running, run `npm run test:catalog` to verify the catalog endpoints. [API contract and examples](docs/API.md)
 
@@ -59,5 +59,6 @@ With the seeded database and app running, run `npm run test:catalog` to verify t
 - PostgreSQL 18.7 and Prisma 7.10.1 with the Node.js PostgreSQL adapter. Prisma 7's self-hosted compatibility table lists PostgreSQL through major version 18. [Prisma supported databases](https://www.prisma.io/docs/orm/v7/reference/supported-databases)
 - Prisma 7.10.1 is pinned while Prisma 8 is a release candidate. [Prisma setup with Neon](https://neon.com/docs/guides/prisma)
 - Zod 4.6.7 validates catalog requests.
+- Geist 1.9.2 supplies locally served typography.
 
 See the [implementation plan](docs/IMPLEMENTATION_PLAN.md), [reference research](docs/RESEARCH.md), and [progress log](docs/PROGRESS.md).
