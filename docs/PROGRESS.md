@@ -35,6 +35,13 @@
 - Chrome checks against the production build covered keyboard navigation, combined filters, provider pricing, sorting, deep links, browser back and forward, pagination, empty and invalid-query states, loading, retries, and cancellation of an older search. The mobile layout fit 390 px and 320 px without horizontal overflow.
 - Lint, type checking, the production build, and all seven catalog integration tests passed. The hosted app and database smoke test requires configured Vercel and Neon access.
 
-## Next · Module 5 model details
+## Module 5 · Model details
 
-Start after the learning checkpoint. Add model detail pages with specifications, provider offerings, benchmark results and provenance, and the unknown-model state. Connect the explorer rows to the detail pages.
+- Added server-rendered pages at `/models/[slug]` using the shared model detail query. They show model specifications, modalities, capabilities, all provider offerings, and benchmark definitions, scores, and provenance.
+- Linked model names in the desktop table and mobile cards. **Back to models** restores a validated explorer query. Lab and provider links open their filtered catalogs ahead of the dedicated directories.
+- The page distinguishes free, unknown, and inapplicable prices and displays a separate state for missing benchmark results. Unknown and invalid slugs return HTTP 404. An isolated database outage returned HTTP 500 with a retry screen.
+- Lint, type checking, the production build, and all eight catalog HTTP tests passed. Chrome verified keyboard navigation, price and benchmark rendering, the filtered return link, association links, and mobile layouts at 390 px and 320 px.
+
+## Next · Module 6 directories and global search
+
+Start after the learning checkpoint. Add lab and provider directory and detail pages, connect the association links, and build search across models, labs, and providers.

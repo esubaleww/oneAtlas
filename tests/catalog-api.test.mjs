@@ -130,3 +130,16 @@ test("returns structured errors for invalid parameters and missing models", asyn
   assert.equal((await request("/api/catalog-filters?foo=bar", 400)).error.code, "INVALID_REQUEST");
   assert.equal((await request("/api/models/missing-model", 404)).error.code, "NOT_FOUND");
 });
+
+test("renders model details and sends HTTP 404 for an unknown model page", async () => {
+  const valid = await globalThis.fetch(new URL("/models/cedar-research-general", baseUrl));
+  assert.equal(valid.status, 200);
+  const html = await valid.text();
+  assert.match(html, /Cedar Research General/);
+  assert.match(html, /Provider offerings/);
+  assert.match(html, /Benchmarks/);
+
+  const missing = await globalThis.fetch(new URL("/models/missing-model", baseUrl));
+  assert.equal(missing.status, 404);
+  assert.match(await missing.text(), /Model not found/);
+});

@@ -41,4 +41,4 @@ Rates are decimal strings with six fractional digits. A rate of `"0.000000"` is 
 
 Failed catalog GET requests use `{ error: { code, message, issues? } }`. Invalid parameters yield `400 INVALID_REQUEST` and may include field-level issues. A valid slug with no model yields `404 NOT_FOUND`. Recognized connection failures yield `503 SERVICE_UNAVAILABLE`. Other unexpected failures yield `500 INTERNAL_ERROR`.
 
-With the demo catalog and app running, use `npm run test:catalog` to exercise the HTTP endpoints. Set `CATALOG_TEST_BASE_URL` to use a different local port. The suite checks the 30-model seed, combined filters, representative and provider-specific rates, stable pagination, benchmark details, and error responses.
+With the demo catalog and app running, use `npm run test:catalog` to exercise the HTTP endpoints. Set `CATALOG_TEST_BASE_URL` to use a different local port. The suite checks the 30-model seed, combined filters, representative and provider-specific rates, stable pagination, benchmark details, and error responses. It also checks that the model page renders from the catalog and returns HTTP 404 for an unknown slug.

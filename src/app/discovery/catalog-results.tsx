@@ -1,27 +1,8 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
+import { capabilityLabels, formatBillingUnit, formatDate, formatRate, formatTokenCount, typeLabels } from "../../catalog/presentation";
 import type { ModelSummary } from "../../server/catalog";
 
-export const typeLabels: Record<ModelSummary["type"], string> = {
-  TEXT_GENERATION: "Text generation",
-  EMBEDDING: "Embedding",
-};
-
-export const capabilityLabels: Record<ModelSummary["capabilities"][number], string> = {
-  REASONING: "Reasoning",
-  TOOL_CALLING: "Tool calling",
-  STRUCTURED_OUTPUT: "Structured output",
-  VISION: "Vision",
-  OPEN_WEIGHTS: "Open weights",
-  MULTILINGUAL: "Multilingual",
-};
-
-const billingUnits = { PER_MILLION_TOKENS: "1M tokens" };
-const integerFormat = new Intl.NumberFormat("en-US");
-const priceFormat = new Intl.NumberFormat("en-US", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 6,
-});
-const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeZone: "UTC" });
 const labColors = [
   "bg-[#e4efe9] text-[#245a46]",
   "bg-[#e9edf8] text-[#384f83]",
@@ -30,24 +11,18 @@ const labColors = [
   "bg-[#e4f0f1] text-[#235561]",
 ];
 
-function formatRate(price: string | null, applies = true) {
-  if (price === null) {
-    return applies ? "Unknown" : "N/A";
-  }
-  return Number(price) === 0 ? "Free" : priceFormat.format(Number(price));
-}
-
-function context(model: ModelSummary) {
-  return model.contextWindow === null ? "Unknown" : integerFormat.format(model.contextWindow);
-}
-
-function released(model: ModelSummary) {
-  return model.releasedOn ? dateFormat.format(new Date(model.releasedOn)) : "Unknown";
-}
-
-function ModelIdentity({ model, card = false }: { model: ModelSummary; card?: boolean }) {
+function ModelIdentity({ model, href, card = false }: { model: ModelSummary; href: string; card?: boolean }) {
   const initials = model.lab.name.split(/\s+/).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
   const color = labColors[model.lab.slug.charCodeAt(0) % labColors.length];
+  const name = (
+    <Link
+      href={href}
+      prefetch={false}
+      className="rounded-sm text-sm font-semibold text-accent underline decoration-accent/35 underline-offset-3 hover:decoration-accent"
+    >
+      {model.name}
+    </Link>
+  );
 
   return (
     <div className="flex min-w-0 items-start gap-3">
@@ -55,9 +30,7 @@ function ModelIdentity({ model, card = false }: { model: ModelSummary; card?: bo
         {initials}
       </span>
       <div className="min-w-0">
-        {card
-          ? <h3 className="text-sm font-semibold text-ink">{model.name}</h3>
-          : <span className="block text-sm font-semibold text-ink">{model.name}</span>}
+        {card ? <h3 className="leading-snug">{name}</h3> : name}
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
           <span>{model.lab.name}</span>
           {model.isDemo && (
@@ -100,7 +73,7 @@ function Rates({ model }: { model: ModelSummary }) {
         </div>
       </dl>
       <p className="mt-1 text-[11px] text-muted">
-        {offering.currency} / {billingUnits[offering.billingUnit]}
+        {formatBillingUnit(offering)}
         {offering.isDemo && !model.isDemo && " · Demo rates"}
       </p>
     </div>
@@ -122,7 +95,10 @@ function Provider({ model }: { model: ModelSummary }) {
   );
 }
 
-export function CatalogResults({ models }: { models: ModelSummary[] }) {
+export function CatalogResults({ models, query }: { models: ModelSummary[]; query: string }) {
+  const returnQuery = query ? `?${new URLSearchParams({ from: query })}` : "";
+  const detailHref = (slug: string) => `/models/${encodeURIComponent(slug)}${returnQuery}`;
+
   return (
     <>
       <div className="hidden overflow-hidden rounded-xl border border-line bg-surface shadow-xs lg:block">
@@ -141,18 +117,20 @@ export function CatalogResults({ models }: { models: ModelSummary[] }) {
           <tbody className="divide-y divide-line">
             {models.map((model) => (
               <tr key={model.slug} className="align-top hover:bg-panel/60">
-                <th scope="row" className="px-4 py-3.5 font-normal"><ModelIdentity model={model} /></th>
+                <th scope="row" className="px-4 py-3.5 font-normal">
+                  <ModelIdentity model={model} href={detailHref(model.slug)} />
+                </th>
                 <td className="px-3 py-3.5">
                   <p className="mb-1.5 font-medium">{typeLabels[model.type]}</p>
                   <Capabilities model={model} />
                 </td>
                 <td className="px-3 py-3.5">
-                  <span className="font-medium tabular-nums">{context(model)}</span>
+                  <span className="font-medium tabular-nums">{formatTokenCount(model.contextWindow)}</span>
                   {model.contextWindow !== null && <span className="mt-1 block text-[11px] text-muted">tokens</span>}
                 </td>
                 <td className="px-3 py-3.5"><Rates model={model} /></td>
                 <td className="px-3 py-3.5"><Provider model={model} /></td>
-                <td className="px-3 py-3.5 text-muted tabular-nums">{released(model)}</td>
+                <td className="px-3 py-3.5 text-muted tabular-nums">{formatDate(model.releasedOn)}</td>
               </tr>
             ))}
           </tbody>
@@ -161,17 +139,17 @@ export function CatalogResults({ models }: { models: ModelSummary[] }) {
       <ul className="grid gap-3 sm:grid-cols-2 lg:hidden" aria-label="AI models">
         {models.map((model) => (
           <li key={model.slug} className="min-w-0 rounded-xl border border-line bg-surface p-4 shadow-xs">
-            <ModelIdentity model={model} card />
+            <ModelIdentity model={model} href={detailHref(model.slug)} card />
             <p className="mt-3 text-xs font-medium">{typeLabels[model.type]}</p>
             <div className="mt-1.5"><Capabilities model={model} /></div>
             <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3 border-t border-line pt-3 text-xs">
               <div>
                 <dt className="mb-1 text-muted">Context</dt>
-                <dd className="font-medium tabular-nums">{context(model)}{model.contextWindow !== null && " tokens"}</dd>
+                <dd className="font-medium tabular-nums">{formatTokenCount(model.contextWindow, true)}</dd>
               </div>
               <div>
                 <dt className="mb-1 text-muted">Released</dt>
-                <dd className="tabular-nums">{released(model)}</dd>
+                <dd className="tabular-nums">{formatDate(model.releasedOn)}</dd>
               </div>
               <div>
                 <dt className="mb-1 text-muted">Token pricing</dt>

@@ -3,8 +3,9 @@
 import { useSearchParams } from "next/navigation";
 import { type FormEvent, useRef, useState } from "react";
 import type { CatalogQuery } from "../../catalog/params";
+import { capabilityLabels, typeLabels } from "../../catalog/presentation";
 import type { CatalogFilters, listModels, ModelSummary } from "../../server/catalog";
-import { capabilityLabels, CatalogLoading, CatalogMessage, CatalogResults, typeLabels } from "./catalog-results";
+import { CatalogLoading, CatalogMessage, CatalogResults } from "./catalog-results";
 import { useCatalogResource } from "./use-catalog-resource";
 
 type ModelPage = Awaited<ReturnType<typeof listModels>>;
@@ -260,7 +261,7 @@ export function ModelExplorer() {
         )}
         {current && current.models.length > 0 && (
           <>
-            <CatalogResults models={current.models} />
+            <CatalogResults models={current.models} query={query} />
             {current.pagination.totalPages > 1 && (
               <nav aria-label="Model pages" className="mt-4 flex flex-wrap items-center justify-between gap-2">
                 <button type="button" className="catalog-button" disabled={current.pagination.page <= 1} onClick={() => goToPage(current.pagination.page - 1)}>

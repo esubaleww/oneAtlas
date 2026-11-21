@@ -1,6 +1,6 @@
 # OneAtlas
 
-OneAtlas is a Full Stack Engineer internship project for exploring AI models, comparing provider prices, and evaluating benchmark results in one catalog. The model explorer at `/` reads the PostgreSQL-backed demo catalog through the app’s API.
+OneAtlas is a Full Stack Engineer internship project for exploring AI models, comparing provider prices, and evaluating benchmark results in one catalog. The explorer at `/` reads the PostgreSQL-backed demo catalog through the app’s API. Detail pages at `/models/[slug]` use the same catalog query as the detail endpoint.
 
 [GitHub repository](https://github.com/esubaleww/oneAtlas)
 
@@ -14,6 +14,8 @@ npm run dev
 ```
 
 Start and seed PostgreSQL, then open [the local model explorer](http://localhost:3000). Search by model name or description, combine filters, and sort by release, context, or token rates. The URL preserves the active query and page across refresh and browser navigation. [Catalog API](docs/API.md)
+
+Select a model name to open its specifications, provider rates, and benchmark results. The **Back to models** link restores the explorer query you opened it from. [Example model](http://localhost:3000/models/cedar-research-general)
 
 ## Start and seed PostgreSQL
 
@@ -48,7 +50,7 @@ npm start
 
 `typecheck` generates the App Router types before running TypeScript. `start` serves the production build. Visit `/` for the explorer and `/missing-page` for the 404 screen.
 
-With the seeded database and app running, run `npm run test:catalog` to verify the catalog endpoints. [API contract and examples](docs/API.md)
+With the seeded database and app running, run `npm run test:catalog` to verify the catalog endpoints and the model detail page, including its HTTP 404 response. [API contract and examples](docs/API.md)
 
 ## Stack and project notes
 
