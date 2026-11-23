@@ -14,10 +14,13 @@ function positiveInteger(maximum: number, fallback: number) {
     .default(fallback);
 }
 
+const searchText = z.string().trim().max(100)
+  .refine((value) => !value.includes("\0"), "Search terms cannot contain a null character.");
+
+export const globalSearchQuery = searchText.min(1);
+
 const catalogQuery = z.strictObject({
-  q: z.string().trim().max(100)
-    .refine((value) => !value.includes("\0"), "Search terms cannot contain a null character.")
-    .optional(),
+  q: searchText.optional(),
   lab: catalogSlug.optional(),
   provider: catalogSlug.optional(),
   type: z.enum(ModelType).optional(),

@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { ZodError } from "zod";
+import { catalogSlug } from "../catalog/params";
 import { Prisma } from "../generated/prisma/client";
 
 const errors = {
@@ -39,4 +40,23 @@ export async function handleApiRead(read: () => Promise<Response>) {
 
     return apiError(code && unavailableCodes.has(code) ? "SERVICE_UNAVAILABLE" : "INTERNAL_ERROR");
   }
+}
+
+export function readCollection<T>(request: Request, read: () => Promise<T>) {
+  if (new URL(request.url).searchParams.size > 0) {
+    return apiError("INVALID_REQUEST");
+  }
+  return handleApiRead(async () => Response.json({ data: await read() }));
+}
+
+export function readRecord<T>(request: Request, slug: string, read: (slug: string) => Promise<T | null>) {
+  const parsed = catalogSlug.safeParse(slug);
+  if (!parsed.success || new URL(request.url).searchParams.size > 0) {
+    return apiError("INVALID_REQUEST", parsed.error);
+  }
+
+  return handleApiRead(async () => {
+    const record = await read(parsed.data);
+    return record ? Response.json({ data: record }) : apiError("NOT_FOUND");
+  });
 }

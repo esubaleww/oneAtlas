@@ -17,6 +17,8 @@ Start and seed PostgreSQL, then open [the local model explorer](http://localhost
 
 Select a model name to open its specifications, provider rates, and benchmark results. The **Back to models** link restores the explorer query you opened it from. [Example model](http://localhost:3000/models/cedar-research-general)
 
+Use **Labs** to browse model creators and their releases, or **Providers** to browse serving services and their offering prices. The search box in the header searches models, labs, and providers together. [Lab directory](http://localhost:3000/labs) · [Provider directory](http://localhost:3000/providers) · [Example global search](http://localhost:3000/search?q=compact)
+
 ## Start and seed PostgreSQL
 
 Use Docker Desktop with the Linux engine running. From the repository root in PowerShell, copy the local connection settings and start the database.
@@ -50,7 +52,7 @@ npm start
 
 `typecheck` generates the App Router types before running TypeScript. `start` serves the production build. Visit `/` for the explorer and `/missing-page` for the 404 screen.
 
-With the seeded database and app running, run `npm run test:catalog` to verify the catalog endpoints and the model detail page, including its HTTP 404 response. [API contract and examples](docs/API.md)
+With the seeded database and app running, run `npm run test:catalog` to verify the catalog endpoints, global search, directory pages, and HTTP 404 responses. [API contract and examples](docs/API.md)
 
 ## Stack and project notes
 

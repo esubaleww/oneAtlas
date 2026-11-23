@@ -7,6 +7,11 @@ Start the database, apply the migrations, seed the demo catalog, and run the app
 | `GET /api/models` | `{ models, pagination }`. Each summary includes the lab, model specifications, modalities, capabilities, total provider count, and a selected `offering` or `null`. |
 | `GET /api/models/[slug]` | One model with its lab, all provider offerings, provenance fields, and benchmark results with their versioned definitions. |
 | `GET /api/catalog-filters` | `{ labs, providers, types, capabilities }`. Options reflect records in the catalog. |
+| `GET /api/labs` | Lab summaries with each lab's model count. |
+| `GET /api/labs/[slug]` | One lab and its models, ordered by release date descending, with unknown dates last. |
+| `GET /api/providers` | Provider summaries with each provider's supported model count. |
+| `GET /api/providers/[slug]` | One provider and its offerings, including the model, creator, rates, billing unit, and provider context. |
+| `GET /api/search?q=…` | `{ models, labs, providers }`. Each group contains up to five hits with their slug, name, description, and demo flag. |
 
 `GET /api/models` accepts the parameters below. Supply each parameter once except for `capability`.
 
@@ -27,7 +32,11 @@ Filters combine with AND. Pagination contains `page`, `pageSize`, `total`, and `
 curl.exe "http://localhost:3000/api/models?lab=cedar-research&provider=relay-cloud&capability=TOOL_CALLING&sort=inputPrice&direction=asc"
 curl.exe "http://localhost:3000/api/models/cedar-research-general"
 curl.exe "http://localhost:3000/api/catalog-filters"
+curl.exe "http://localhost:3000/api/providers/relay-cloud"
+curl.exe "http://localhost:3000/api/search?q=compact"
 ```
+
+Global search requires one `q` of 1 to 100 characters after trimming. It matches a literal case-insensitive substring in names and descriptions. Exact names rank first, followed by name prefixes, then other matches. Name and slug break ties within each group.
 
 ## Price selection and sorting
 
@@ -39,6 +48,6 @@ Rates are decimal strings with six fractional digits. A rate of `"0.000000"` is 
 
 ## Errors and checks
 
-Failed catalog GET requests use `{ error: { code, message, issues? } }`. Invalid parameters yield `400 INVALID_REQUEST` and may include field-level issues. A valid slug with no model yields `404 NOT_FOUND`. Recognized connection failures yield `503 SERVICE_UNAVAILABLE`. Other unexpected failures yield `500 INTERNAL_ERROR`.
+Failed catalog GET requests use `{ error: { code, message, issues? } }`. Invalid parameters yield `400 INVALID_REQUEST` and may include field-level issues. A valid slug with no matching model, lab, or provider yields `404 NOT_FOUND`. Recognized connection failures yield `503 SERVICE_UNAVAILABLE`. Other unexpected failures yield `500 INTERNAL_ERROR`.
 
-With the demo catalog and app running, use `npm run test:catalog` to exercise the HTTP endpoints. Set `CATALOG_TEST_BASE_URL` to use a different local port. The suite checks the 30-model seed, combined filters, representative and provider-specific rates, stable pagination, benchmark details, and error responses. It also checks that the model page renders from the catalog and returns HTTP 404 for an unknown slug.
+With the demo catalog and app running, use `npm run test:catalog` to exercise the HTTP endpoints. Set `CATALOG_TEST_BASE_URL` to use a different local port. The suite checks the 30-model seed, combined filters, representative and provider-specific rates, stable pagination, benchmark details, directory relationships, bounded global search, and HTTP 404 responses for unknown slugs.

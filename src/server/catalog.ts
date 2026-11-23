@@ -6,8 +6,7 @@ import type { Capability } from "../generated/prisma/enums";
 import { getDb } from "./db";
 
 const organizationFields = { slug: true, name: true, isDemo: true } as const;
-const offeringFields = {
-  provider: { select: organizationFields },
+const rateFields = {
   inputPrice: true,
   outputPrice: true,
   currency: true,
@@ -16,18 +15,27 @@ const offeringFields = {
   isDemo: true,
 } as const satisfies Prisma.ModelOfferingSelect;
 
-const modelFields = {
+const offeringFields = {
+  ...rateFields,
+  provider: { select: organizationFields },
+} as const satisfies Prisma.ModelOfferingSelect;
+
+const relatedModelFields = {
   slug: true,
   name: true,
   description: true,
   type: true,
+  releasedOn: true,
+  isDemo: true,
+} as const satisfies Prisma.ModelSelect;
+
+const modelFields = {
+  ...relatedModelFields,
   inputModalities: true,
   outputModalities: true,
   capabilities: true,
   contextWindow: true,
   maxOutputTokens: true,
-  releasedOn: true,
-  isDemo: true,
 } as const satisfies Prisma.ModelSelect;
 
 function dateOnly(value: Date | null) {
@@ -259,3 +267,108 @@ export async function getCatalogFilters() {
 export type ModelSummary = Awaited<ReturnType<typeof listModels>>["models"][number];
 export type ModelDetail = NonNullable<Awaited<ReturnType<typeof getModel>>>;
 export type CatalogFilters = Awaited<ReturnType<typeof getCatalogFilters>>;
+
+const directoryFields = {
+  ...organizationFields,
+  description: true,
+  websiteUrl: true,
+} as const;
+
+export async function listLabs() {
+  const labs = await getDb().lab.findMany({
+    select: { ...directoryFields, _count: { select: { models: true } } },
+    orderBy: [{ name: "asc" }, { slug: "asc" }],
+  });
+  return labs.map(({ _count, ...lab }) => ({ ...lab, modelCount: _count.models }));
+}
+
+export async function listProviders() {
+  const providers = await getDb().provider.findMany({
+    select: { ...directoryFields, _count: { select: { offerings: true } } },
+    orderBy: [{ name: "asc" }, { slug: "asc" }],
+  });
+  return providers.map(({ _count, ...provider }) => ({ ...provider, modelCount: _count.offerings }));
+}
+
+export async function getLab(slug: string) {
+  const lab = await getDb().lab.findUnique({
+    where: { slug },
+    select: {
+      ...directoryFields,
+      models: {
+        select: relatedModelFields,
+        orderBy: [{ releasedOn: { sort: "desc", nulls: "last" } }, { slug: "asc" }],
+      },
+    },
+  });
+  if (!lab) return null;
+
+  return {
+    ...lab,
+    models: lab.models.map((model) => ({ ...model, releasedOn: dateOnly(model.releasedOn) })),
+  };
+}
+
+export async function getProvider(slug: string) {
+  const provider = await getDb().provider.findUnique({
+    where: { slug },
+    select: {
+      ...directoryFields,
+      offerings: {
+        select: {
+          ...rateFields,
+          providerModelId: true,
+          model: { select: { ...relatedModelFields, lab: { select: organizationFields } } },
+        },
+        orderBy: [{ model: { name: "asc" } }, { modelSlug: "asc" }],
+      },
+    },
+  });
+  if (!provider) return null;
+
+  return {
+    ...provider,
+    offerings: provider.offerings.map(({ model, ...offering }) => ({
+      ...serializeOffering(offering),
+      model: { ...model, releasedOn: dateOnly(model.releasedOn) },
+    })),
+  };
+}
+
+export type SearchHit = {
+  slug: string;
+  name: string;
+  description: string;
+  isDemo: boolean;
+};
+
+export async function searchCatalog(query: string) {
+  const db = getDb();
+  const nameMatch = Prisma.sql`strpos(lower("name"), lower(${query}))`;
+
+  // Callers supply static table identifiers. The search term is bound as a parameter.
+  function matches(table: Prisma.Sql) {
+    return db.$queryRaw<SearchHit[]>`
+      SELECT "slug", "name", "description", "isDemo"
+      FROM ${table}
+      WHERE ${nameMatch} > 0 OR strpos(lower("description"), lower(${query})) > 0
+      ORDER BY (lower("name") = lower(${query})) DESC,
+               (${nameMatch} = 1) DESC,
+               "name" ASC, "slug" ASC
+      LIMIT 5
+    `;
+  }
+
+  const [models, labs, providers] = await db.$transaction([
+    matches(Prisma.sql`"Model"`),
+    matches(Prisma.sql`"Lab"`),
+    matches(Prisma.sql`"Provider"`),
+  ], { isolationLevel: "RepeatableRead" });
+
+  return { models, labs, providers };
+}
+
+export type DirectoryEntry = Awaited<ReturnType<typeof listLabs>>[number];
+export type LabDetail = NonNullable<Awaited<ReturnType<typeof getLab>>>;
+export type ProviderDetail = NonNullable<Awaited<ReturnType<typeof getProvider>>>;
+export type GlobalSearchResults = Awaited<ReturnType<typeof searchCatalog>>;

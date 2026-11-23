@@ -15,10 +15,6 @@ type Offering = ModelDetail["offerings"][number];
 const scoreFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 4 });
 const catalogLinkClass = "rounded-sm font-medium text-accent underline decoration-accent/35 underline-offset-3 hover:decoration-accent";
 
-function organizationHref(filter: "lab" | "provider", slug: string) {
-  return `/?${new URLSearchParams({ [filter]: slug })}`;
-}
-
 function DemoBadge({ children = "Demo" }: { children?: ReactNode }) {
   return <span className="inline-flex w-fit items-center rounded bg-[#f5efdf] px-2 py-1 text-[11px] leading-none font-medium text-[#715524]">{children}</span>;
 }
@@ -126,7 +122,7 @@ function ProviderOffering({ offering, type }: { offering: Offering; type: ModelD
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-sm font-semibold">
-              <Link href={organizationHref("provider", offering.provider.slug)} className={catalogLinkClass}>{offering.provider.name}</Link>
+              <Link href={`/providers/${offering.provider.slug}`} className={catalogLinkClass}>{offering.provider.name}</Link>
             </h3>
             {offering.isDemo && <DemoBadge>Demo rates</DemoBadge>}
           </div>
@@ -212,7 +208,7 @@ export function ModelDetails({ model, backHref }: { model: ModelDetail; backHref
         <div className="min-w-0">
           <div className="mb-3 flex flex-wrap items-center gap-2.5">
             <Link
-              href={organizationHref("lab", model.lab.slug)}
+              href={`/labs/${model.lab.slug}`}
               className="rounded-sm text-sm font-medium text-[#c9f0dc] underline decoration-white/45 underline-offset-3 hover:decoration-white focus-visible:outline-white"
             >
               {model.lab.name}

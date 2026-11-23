@@ -4,9 +4,9 @@ import { useSearchParams } from "next/navigation";
 import { type FormEvent, useRef, useState } from "react";
 import type { CatalogQuery } from "../../catalog/params";
 import { capabilityLabels, typeLabels } from "../../catalog/presentation";
+import { useCatalogResource } from "../../catalog/use-catalog-resource";
 import type { CatalogFilters, listModels, ModelSummary } from "../../server/catalog";
 import { CatalogLoading, CatalogMessage, CatalogResults } from "./catalog-results";
-import { useCatalogResource } from "./use-catalog-resource";
 
 type ModelPage = Awaited<ReturnType<typeof listModels>>;
 type SelectOption = { value: string; label: string };

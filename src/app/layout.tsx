@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { GeistSans } from "geist/font/sans";
+import { CatalogNavigation, GlobalSearch, GlobalSearchForm } from "./catalog-navigation";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,10 +24,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           Skip to content
         </a>
         <header className="border-b border-line bg-surface">
-          <div className="mx-auto flex h-16 max-w-7xl items-center gap-5 px-5 sm:gap-8 sm:px-8">
+          <div className="mx-auto flex min-h-16 max-w-7xl flex-wrap items-center gap-x-3 gap-y-2.5 px-5 py-3 sm:gap-x-4 sm:px-8 md:flex-nowrap">
             <Link
               href="/"
-              className="inline-flex items-center gap-2.5 rounded-sm text-[19px] font-semibold tracking-tight"
+              className="inline-flex shrink-0 items-center gap-2 rounded-sm text-[18px] font-semibold tracking-tight sm:gap-2.5 sm:text-[19px]"
             >
               <span
                 aria-hidden="true"
@@ -36,13 +37,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               </span>
               OneAtlas
             </Link>
-            <nav aria-label="Main navigation" className="flex h-full items-center">
-              <Link href="/" className="inline-flex h-full items-center border-b-2 border-accent px-1 pt-0.5 text-sm font-medium text-accent">
-                Models
-              </Link>
-            </nav>
-            <a href="/api/models" target="_blank" rel="noreferrer" className="ml-auto rounded-md border border-line px-2.5 py-1.5 text-xs font-medium text-muted hover:border-accent hover:text-accent">
-              <span className="hidden sm:inline">Catalog </span>API
+            <CatalogNavigation />
+            <div className="min-w-0 basis-full md:ml-auto md:max-w-82 md:flex-1 md:basis-auto">
+              <Suspense fallback={<GlobalSearchForm />}>
+                <GlobalSearch />
+              </Suspense>
+            </div>
+            <a href="/api/models" target="_blank" rel="noreferrer" className="hidden shrink-0 rounded-md border border-line px-2.5 py-1.5 text-xs font-medium text-muted hover:border-accent hover:text-accent lg:inline-flex">
+              Catalog API
               <span className="sr-only"> (opens in a new tab)</span>
             </a>
           </div>

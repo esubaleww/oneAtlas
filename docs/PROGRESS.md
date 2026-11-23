@@ -42,6 +42,13 @@
 - The page distinguishes free, unknown, and inapplicable prices and displays a separate state for missing benchmark results. Unknown and invalid slugs return HTTP 404. An isolated database outage returned HTTP 500 with a retry screen.
 - Lint, type checking, the production build, and all eight catalog HTTP tests passed. Chrome verified keyboard navigation, price and benchmark rendering, the filtered return link, association links, and mobile layouts at 390 px and 320 px.
 
-## Next · Module 6 directories and global search
+## Module 6 · Directories and global search
 
-Start after the learning checkpoint. Add lab and provider directory and detail pages, connect the association links, and build search across models, labs, and providers.
+- Added lab and provider directories and profiles. Labs show their models and release dates. Providers show supported models, creators, per-provider token rates, and context limits.
+- Connected model detail pages to lab and provider profiles. Each profile links both to individual models and to its filtered model explorer.
+- Added global search in the header and a shareable `/search?q=…` results page. The search API returns up to five matches per entity type, ranks exact and prefix name matches first, and reuses request cancellation in the browser.
+- All 11 catalog HTTP tests, lint, type checking, and the production build passed. Chrome verified keyboard search, URL reload, model and directory links, provider rates, empty results, search retry, and mobile layouts at 390 px and 320 px.
+
+## Next · Module 7 comparison
+
+Start after the learning checkpoint. Add a selection tray and a shareable comparison for two to four models. Show pricing basis, context windows, modalities, capabilities, and benchmarks with clear missing-data states.

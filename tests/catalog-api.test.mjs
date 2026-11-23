@@ -143,3 +143,72 @@ test("renders model details and sends HTTP 404 for an unknown model page", async
   assert.equal(missing.status, 404);
   assert.match(await missing.text(), /Model not found/);
 });
+
+test("serves separate lab and provider directories with the corresponding model counts", async () => {
+  const { data: labs } = await request("/api/labs");
+  const { data: providers } = await request("/api/providers");
+  assert.equal(labs.length, 5);
+  assert.equal(providers.length, 5);
+  assert.equal(labs.find(({ slug }) => slug === "cedar-research").modelCount, 6);
+  assert.equal(providers.find(({ slug }) => slug === "relay-cloud").modelCount, 8);
+  assert(!labs.some(({ slug }) => slug === "relay-cloud"));
+});
+
+test("returns lab releases and prices from the requested provider", async () => {
+  const { data: lab } = await request("/api/labs/cedar-research");
+  assert.equal(lab.name, "Cedar Research");
+  assert.equal(lab.models.length, 6);
+  assert(lab.models.every(({ slug }) => slug.startsWith("cedar-research-")));
+  const releaseDates = lab.models.flatMap(({ releasedOn }) => releasedOn ? [releasedOn] : []);
+  assert.deepEqual(releaseDates, releaseDates.toSorted().reverse());
+  assert.equal(lab.models.at(-1).releasedOn, null);
+
+  const { data: provider } = await request("/api/providers/relay-cloud");
+  const general = provider.offerings.find(({ model }) => model.slug === "cedar-research-general");
+  assert.equal(general.model.lab.slug, "cedar-research");
+  assert.equal(general.inputPrice, "0.800000");
+  assert.equal(general.outputPrice, "3.200000");
+  assert.equal(general.currency, "USD");
+  assert.equal(general.billingUnit, "PER_MILLION_TOKENS");
+
+  for (const path of ["/api/labs/missing-lab", "/api/providers/missing-provider"]) {
+    assert.equal((await request(path, 404)).error.code, "NOT_FOUND");
+  }
+  assert.equal((await request("/api/labs/Invalid", 400)).error.code, "INVALID_REQUEST");
+
+  for (const [path, heading] of [
+    ["/labs/cedar-research", /Models and releases/],
+    ["/providers/relay-cloud", /Supported models/],
+  ]) {
+    const page = await globalThis.fetch(new URL(path, baseUrl));
+    assert.equal(page.status, 200);
+    assert.match(await page.text(), heading);
+  }
+  for (const [path, heading] of [
+    ["/labs/missing-lab", /Lab not found/],
+    ["/providers/missing-provider", /Provider not found/],
+  ]) {
+    const missing = await globalThis.fetch(new URL(path, baseUrl));
+    assert.equal(missing.status, 404);
+    assert.match(await missing.text(), heading);
+  }
+});
+
+test("searches models, labs, and providers with bounded literal matches", async () => {
+  const { data: cedar } = await request("/api/search?q=%20CeDaR%20");
+  assert.equal(cedar.models.length, 5);
+  assert(cedar.models.every(({ slug }) => slug.startsWith("cedar-research-")));
+  assert.equal(cedar.labs[0].slug, "cedar-research");
+  const { data: relay } = await request("/api/search?q=relay%20cloud");
+  assert.equal(relay.providers[0].slug, "relay-cloud");
+  const { data: descriptions } = await request("/api/search?q=tool%20calls");
+  assert(descriptions.models.some(({ slug }) => slug === "cedar-research-general"));
+  const { data: literal } = await request("/api/search?q=%25");
+  assert.deepEqual(literal, { models: [], labs: [], providers: [] });
+  for (const path of [
+    "/api/search", "/api/search?q=%20", "/api/search?q=a&q=b",
+    "/api/search?q=relay&extra=1", "/api/search?q=%00", `/api/search?q=${"a".repeat(101)}`,
+  ]) {
+    assert.equal((await request(path, 400)).error.code, "INVALID_REQUEST");
+  }
+});
