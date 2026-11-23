@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { capabilityLabels, formatBillingUnit, formatDate, formatRate, formatTokenCount, typeLabels } from "../../catalog/presentation";
 import type { ModelSummary } from "../../server/catalog";
+import { CompareToggle } from "../compare/comparison-selection";
 
 const labColors = [
   "bg-[#e4efe9] text-[#245a46]",
@@ -106,12 +107,13 @@ export function CatalogResults({ models, query }: { models: ModelSummary[]; quer
           <caption className="sr-only">AI models and selected provider pricing</caption>
           <thead className="border-b border-line bg-panel text-muted">
             <tr>
-              <th scope="col" className="w-[26%] px-4 py-3.5 font-medium">Model</th>
-              <th scope="col" className="w-[19%] px-3 py-3.5 font-medium">Type &amp; capabilities</th>
-              <th scope="col" className="w-[10%] px-3 py-3.5 font-medium">Context</th>
-              <th scope="col" className="w-[19%] px-3 py-3.5 font-medium">Token pricing</th>
-              <th scope="col" className="w-[15%] px-3 py-3.5 font-medium">Provider</th>
+              <th scope="col" className="w-[24%] px-4 py-3.5 font-medium">Model</th>
+              <th scope="col" className="w-[17%] px-3 py-3.5 font-medium">Type &amp; capabilities</th>
+              <th scope="col" className="w-[9%] px-3 py-3.5 font-medium">Context</th>
+              <th scope="col" className="w-[17%] px-3 py-3.5 font-medium">Token pricing</th>
+              <th scope="col" className="w-[14%] px-3 py-3.5 font-medium">Provider</th>
               <th scope="col" className="w-[11%] px-3 py-3.5 font-medium">Released</th>
+              <th scope="col" className="w-[8%] px-2 py-3.5 text-center font-medium">Compare</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
@@ -131,6 +133,7 @@ export function CatalogResults({ models, query }: { models: ModelSummary[]; quer
                 <td className="px-3 py-3.5"><Rates model={model} /></td>
                 <td className="px-3 py-3.5"><Provider model={model} /></td>
                 <td className="px-3 py-3.5 text-muted tabular-nums">{formatDate(model.releasedOn)}</td>
+                <td className="px-2 py-3.5 text-center"><CompareToggle model={model} compact /></td>
               </tr>
             ))}
           </tbody>
@@ -139,7 +142,10 @@ export function CatalogResults({ models, query }: { models: ModelSummary[]; quer
       <ul className="grid gap-3 sm:grid-cols-2 lg:hidden" aria-label="AI models">
         {models.map((model) => (
           <li key={model.slug} className="min-w-0 rounded-xl border border-line bg-surface p-4 shadow-xs">
-            <ModelIdentity model={model} href={detailHref(model.slug)} card />
+            <div className="flex items-start justify-between gap-2">
+              <ModelIdentity model={model} href={detailHref(model.slug)} card />
+              <CompareToggle model={model} />
+            </div>
             <p className="mt-3 text-xs font-medium">{typeLabels[model.type]}</p>
             <div className="mt-1.5"><Capabilities model={model} /></div>
             <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3 border-t border-line pt-3 text-xs">

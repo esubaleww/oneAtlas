@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   capabilityLabels,
+  formatBenchmarkValue,
   formatBillingUnit,
   formatDate,
   formatRate,
@@ -10,30 +11,14 @@ import {
   typeLabels,
 } from "../../../catalog/presentation";
 import type { ModelDetail } from "../../../server/catalog";
+import { CompareToggle } from "../../compare/comparison-selection";
+import { SourceLink } from "../../source-link";
 
 type Offering = ModelDetail["offerings"][number];
-const scoreFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 4 });
 const catalogLinkClass = "rounded-sm font-medium text-accent underline decoration-accent/35 underline-offset-3 hover:decoration-accent";
 
 function DemoBadge({ children = "Demo" }: { children?: ReactNode }) {
   return <span className="inline-flex w-fit items-center rounded bg-[#f5efdf] px-2 py-1 text-[11px] leading-none font-medium text-[#715524]">{children}</span>;
-}
-
-function SourceLink({ url, children, fallback = children }: {
-  url: string | null;
-  children: string;
-  fallback?: string;
-}) {
-  const source = url && URL.canParse(url) ? new URL(url) : null;
-  if (source?.protocol !== "https:" && source?.protocol !== "http:") {
-    return <>{fallback}</>;
-  }
-
-  return (
-    <a href={source.href} className={catalogLinkClass} target="_blank" rel="noreferrer">
-      {children}<span className="sr-only"> (opens in a new tab)</span>
-    </a>
-  );
 }
 
 function CatalogSource({ source, retrievedOn, demo }: {
@@ -169,7 +154,6 @@ function BenchmarkResults({ results }: { results: ModelDetail["benchmarks"] }) {
         <ul className="divide-y divide-line">
           {results.map((result) => {
             const { benchmark } = result;
-            const score = scoreFormat.format(Number(result.value));
             return (
               <li key={benchmark.slug} className="px-5 py-4 sm:px-6">
                 <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-5">
@@ -180,7 +164,7 @@ function BenchmarkResults({ results }: { results: ModelDetail["benchmarks"] }) {
                     <p className="mt-1 text-xs leading-relaxed text-muted">{benchmark.protocol}</p>
                   </div>
                   <div className="w-fit min-w-28 rounded-lg border border-line bg-accent-soft px-3 py-2.5 text-accent sm:self-start sm:text-right">
-                    <p className="text-lg font-semibold tabular-nums">{score}{benchmark.unit === "%" ? "%" : ` ${benchmark.unit}`}</p>
+                    <p className="text-lg font-semibold tabular-nums">{formatBenchmarkValue(result.value, benchmark.unit)}</p>
                     <p className="mt-0.5 text-[11px]">{benchmark.direction === "HIGHER_IS_BETTER" ? "Higher is better" : "Lower is better"}</p>
                   </div>
                 </div>
@@ -201,9 +185,12 @@ function BenchmarkResults({ results }: { results: ModelDetail["benchmarks"] }) {
 export function ModelDetails({ model, backHref }: { model: ModelDetail; backHref: string }) {
   return (
     <>
-      <Link href={backHref} className="mb-4 inline-flex items-center gap-2 rounded-sm text-sm font-medium text-accent hover:underline">
-        <span aria-hidden="true">←</span> Back to models
-      </Link>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <Link href={backHref} className="inline-flex items-center gap-2 rounded-sm text-sm font-medium text-accent hover:underline">
+          <span aria-hidden="true">←</span> Back to models
+        </Link>
+        <CompareToggle model={model} />
+      </div>
       <div className="catalog-hero grid gap-5 rounded-2xl px-6 py-7 text-white sm:px-9 sm:py-9 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
         <div className="min-w-0">
           <div className="mb-3 flex flex-wrap items-center gap-2.5">

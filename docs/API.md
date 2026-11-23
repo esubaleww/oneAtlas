@@ -12,6 +12,7 @@ Start the database, apply the migrations, seed the demo catalog, and run the app
 | `GET /api/providers` | Provider summaries with each provider's supported model count. |
 | `GET /api/providers/[slug]` | One provider and its offerings, including the model, creator, rates, billing unit, and provider context. |
 | `GET /api/search?q=…` | `{ models, labs, providers }`. Each group contains up to five hits with their slug, name, description, and demo flag. |
+| `GET /api/compare?ids=…` | `{ models }` in the requested order. Each item has the model detail fields plus a `pricingProviderSlug`, which is `null` if the model has no offerings. |
 
 `GET /api/models` accepts the parameters below. Supply each parameter once except for `capability`.
 
@@ -34,13 +35,16 @@ curl.exe "http://localhost:3000/api/models/cedar-research-general"
 curl.exe "http://localhost:3000/api/catalog-filters"
 curl.exe "http://localhost:3000/api/providers/relay-cloud"
 curl.exe "http://localhost:3000/api/search?q=compact"
+curl.exe "http://localhost:3000/api/compare?ids=cedar-research-general,cedar-research-embed"
 ```
 
 Global search requires one `q` of 1 to 100 characters after trimming. It matches a literal case-insensitive substring in names and descriptions. Exact names rank first, followed by name prefixes, then other matches. Name and slug break ties within each group.
 
+Comparison requires exactly one `ids` parameter with two to four distinct comma-separated model slugs. Each slug follows the same rules as a model detail slug. A valid selection with a missing model returns `404 NOT_FOUND` for the whole request. The comparison page preserves column order in its URL and groups displayed scores by benchmark version and demo status.
+
 ## Price selection and sorting
 
-A provider filter selects that provider's offering. With no provider filter, the list prioritizes offerings with a known input rate, then USD, then billing unit and currency. Within that group, it chooses the lowest input rate and breaks ties by provider slug. Both displayed rates and the sort value come from that selected offering.
+A provider filter selects that provider's offering. With no provider filter, the list prioritizes offerings with a known input rate, then USD, then billing unit and currency. Within that group, it chooses the lowest input rate and breaks ties by provider slug. Both displayed rates and the sort value come from that selected offering. Comparison uses the same default rule for each `pricingProviderSlug` and includes all offerings in the response.
 
 For price sorts, PostgreSQL groups known rates by billing unit and currency and orders rates within each group. All four sorts put missing values last and break ties by model slug ascending. The list count and page use the same database snapshot.
 
@@ -50,4 +54,4 @@ Rates are decimal strings with six fractional digits. A rate of `"0.000000"` is 
 
 Failed catalog GET requests use `{ error: { code, message, issues? } }`. Invalid parameters yield `400 INVALID_REQUEST` and may include field-level issues. A valid slug with no matching model, lab, or provider yields `404 NOT_FOUND`. Recognized connection failures yield `503 SERVICE_UNAVAILABLE`. Other unexpected failures yield `500 INTERNAL_ERROR`.
 
-With the demo catalog and app running, use `npm run test:catalog` to exercise the HTTP endpoints. Set `CATALOG_TEST_BASE_URL` to use a different local port. The suite checks the 30-model seed, combined filters, representative and provider-specific rates, stable pagination, benchmark details, directory relationships, bounded global search, and HTTP 404 responses for unknown slugs.
+With the demo catalog and app running, use `npm run test:catalog` to exercise the HTTP endpoints. Set `CATALOG_TEST_BASE_URL` to use a different local port. The suite checks the 30-model seed, combined filters, representative and provider-specific rates, stable pagination, benchmark details, directory relationships, bounded global search, comparison ordering and validation, and HTTP 404 responses for unknown slugs.

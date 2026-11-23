@@ -51,6 +51,12 @@ function serializeOffering<T extends Pick<ModelOffering, "inputPrice" | "outputP
   };
 }
 
+const representativeOfferingOrder = Prisma.sql`
+  candidate."inputPrice" IS NULL, (candidate."currency" = 'USD') DESC,
+  candidate."billingUnit", candidate."currency",
+  candidate."inputPrice" ASC NULLS LAST, candidate."providerSlug" ASC
+`;
+
 const sortColumns = {
   inputPrice: Prisma.sql`offering."inputPrice"`,
   outputPrice: Prisma.sql`offering."outputPrice"`,
@@ -129,9 +135,7 @@ export function listModels(query: CatalogQuery) {
                candidate."billingUnit", candidate."currency"
         FROM "ModelOffering" AS candidate
         WHERE candidate."modelSlug" = model."slug" ${provider}
-        ORDER BY candidate."inputPrice" IS NULL, (candidate."currency" = 'USD') DESC,
-                 candidate."billingUnit", candidate."currency",
-                 candidate."inputPrice" ASC NULLS LAST, candidate."providerSlug" ASC
+        ORDER BY ${representativeOfferingOrder}
         LIMIT 1
       ) AS offering ON true
       ${where}
@@ -172,52 +176,46 @@ export function listModels(query: CatalogQuery) {
   }, { isolationLevel: "RepeatableRead" });
 }
 
-export async function getModel(slug: string) {
-  const model = await getDb().model.findUnique({
-    where: { slug },
+const modelDetailFields = {
+  ...modelFields,
+  sourceUrl: true,
+  retrievedOn: true,
+  lab: { select: { ...organizationFields, websiteUrl: true } },
+  offerings: {
+    orderBy: { providerSlug: "asc" },
     select: {
-      ...modelFields,
+      ...offeringFields,
+      provider: { select: { ...organizationFields, websiteUrl: true } },
+      providerModelId: true,
       sourceUrl: true,
       retrievedOn: true,
-      lab: { select: { ...organizationFields, websiteUrl: true } },
-      offerings: {
-        orderBy: { providerSlug: "asc" },
-        select: {
-          ...offeringFields,
-          provider: { select: { ...organizationFields, websiteUrl: true } },
-          providerModelId: true,
-          sourceUrl: true,
-          retrievedOn: true,
-        },
-      },
-      results: {
-        orderBy: { benchmarkSlug: "asc" },
-        select: {
-          benchmark: {
-            select: {
-              slug: true,
-              name: true,
-              description: true,
-              version: true,
-              protocol: true,
-              unit: true,
-              category: true,
-              direction: true,
-            },
-          },
-          value: true,
-          sourceLabel: true,
-          sourceUrl: true,
-          measuredOn: true,
-          isDemo: true,
-        },
-      },
     },
-  });
-  if (!model) {
-    return null;
-  }
+  },
+  results: {
+    orderBy: { benchmarkSlug: "asc" },
+    select: {
+      benchmark: {
+        select: {
+          slug: true,
+          name: true,
+          description: true,
+          version: true,
+          protocol: true,
+          unit: true,
+          category: true,
+          direction: true,
+        },
+      },
+      value: true,
+      sourceLabel: true,
+      sourceUrl: true,
+      measuredOn: true,
+      isDemo: true,
+    },
+  },
+} as const satisfies Prisma.ModelSelect;
 
+function serializeModelDetail(model: Prisma.ModelGetPayload<{ select: typeof modelDetailFields }>) {
   const { results, offerings, ...details } = model;
   return {
     ...details,
@@ -233,6 +231,36 @@ export async function getModel(slug: string) {
       measuredOn: dateOnly(result.measuredOn),
     })),
   };
+}
+
+export async function getModel(slug: string) {
+  const model = await getDb().model.findUnique({ where: { slug }, select: modelDetailFields });
+  return model ? serializeModelDetail(model) : null;
+}
+
+export type ComparisonModel = ModelDetail & { pricingProviderSlug: string | null };
+export type ComparisonData = { models: ComparisonModel[] };
+
+export async function getComparison(ids: string[]): Promise<ComparisonData | null> {
+  const db = getDb();
+  const [records, selectedOffers] = await db.$transaction([
+    db.model.findMany({ where: { slug: { in: ids } }, select: modelDetailFields }),
+    db.$queryRaw<{ modelSlug: string; providerSlug: string }[]>`
+      SELECT DISTINCT ON (candidate."modelSlug") candidate."modelSlug", candidate."providerSlug"
+      FROM "ModelOffering" AS candidate
+      WHERE candidate."modelSlug" IN (${Prisma.join(ids)})
+      ORDER BY candidate."modelSlug", ${representativeOfferingOrder}
+    `,
+  ], { isolationLevel: "RepeatableRead" });
+  const recordsBySlug = new Map(records.map((record) => [record.slug, record]));
+  const pricingProviders = new Map(selectedOffers.map(({ modelSlug, providerSlug }) => [modelSlug, providerSlug]));
+  const models: ComparisonModel[] = [];
+  for (const id of ids) {
+    const model = recordsBySlug.get(id);
+    if (!model) return null;
+    models.push({ ...serializeModelDetail(model), pricingProviderSlug: pricingProviders.get(id) ?? null });
+  }
+  return { models };
 }
 
 export async function getCatalogFilters() {

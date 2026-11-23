@@ -30,6 +30,7 @@ const priceFormat = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 6,
 });
 const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeZone: "UTC" });
+const scoreFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 4 });
 
 export function formatRate(price: string | null, applies = true) {
   if (price === null) {
@@ -52,4 +53,9 @@ export function formatTokenCount(value: number | null, withUnit = false) {
 
 export function formatDate(value: string | null) {
   return value ? dateFormat.format(new Date(value)) : "Unknown";
+}
+
+export function formatBenchmarkValue(value: string, unit: string) {
+  const score = scoreFormat.format(Number(value));
+  return score + (unit === "%" ? unit : ` ${unit}`);
 }

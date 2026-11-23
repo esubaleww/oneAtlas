@@ -49,6 +49,13 @@
 - Added global search in the header and a shareable `/search?q=…` results page. The search API returns up to five matches per entity type, ranks exact and prefix name matches first, and reuses request cancellation in the browser.
 - All 11 catalog HTTP tests, lint, type checking, and the production build passed. Chrome verified keyboard search, URL reload, model and directory links, provider rates, empty results, search retry, and mobile layouts at 390 px and 320 px.
 
-## Next · Module 7 comparison
+## Module 7 · Comparison
 
-Start after the learning checkpoint. Add a selection tray and a shareable comparison for two to four models. Show pricing basis, context windows, modalities, capabilities, and benchmarks with clear missing-data states.
+- Added comparison controls to the model explorer and detail pages, with a tray for up to four selections. The comparison page lets users search for, add, remove, and replace models. Its URL preserves the selected models and their column order.
+- Added `/api/compare` for two to four distinct model slugs. It loads model details and the default pricing provider from the same PostgreSQL snapshot. Both displayed rates come from that provider and show their currency and billing unit.
+- The comparison table shows specifications, modalities, capabilities, providers, and benchmark versions and scores. It distinguishes free, unknown, inapplicable, and unavailable values and separates demo benchmark results from reported results.
+- All 13 catalog HTTP tests, lint, type checking, and the production build passed. Chrome verified selection, replacement, clipboard and URL sharing, browser history, errors and retry, and keyboard scrolling on the 320 px and 390 px layouts.
+
+## Next · Module 8 rankings
+
+Start after the learning checkpoint. Add a leaderboard for a selected benchmark and model category, with the scoring direction, units, sources, ties, and demo labels visible.

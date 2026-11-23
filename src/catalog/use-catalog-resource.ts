@@ -5,17 +5,18 @@ type Resource<T> =
   | { status: "ready"; data: T }
   | { status: "error"; httpStatus?: number };
 
-export function useCatalogResource<T>(url: string) {
+export function useCatalogResource<T>(url: string | null) {
   const [attempt, setAttempt] = useState(0);
   const key = `${attempt}:${url}`;
   const [response, setResponse] = useState<{ key: string; state: Resource<T> }>();
 
   useEffect(() => {
+    if (url === null) return;
     const controller = new AbortController();
 
-    async function load() {
+    async function load(requestUrl: string) {
       try {
-        const result = await fetch(url, { signal: controller.signal, cache: "no-store" });
+        const result = await fetch(requestUrl, { signal: controller.signal, cache: "no-store" });
         if (!result.ok) {
           if (!controller.signal.aborted) {
             setResponse({ key, state: { status: "error", httpStatus: result.status } });
@@ -37,7 +38,7 @@ export function useCatalogResource<T>(url: string) {
       }
     }
 
-    void load();
+    void load(url);
     return () => controller.abort();
   }, [key, url]);
 

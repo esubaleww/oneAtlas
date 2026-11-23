@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Capability, ModelType } from "../generated/prisma/enums";
+import { MAX_COMPARISON_MODELS, MIN_COMPARISON_MODELS } from "./comparison";
 
 export const catalogSlug = z
   .string()
@@ -18,6 +19,17 @@ const searchText = z.string().trim().max(100)
   .refine((value) => !value.includes("\0"), "Search terms cannot contain a null character.");
 
 export const globalSearchQuery = searchText.min(1);
+
+const comparisonDraft = z.array(catalogSlug).max(MAX_COMPARISON_MODELS)
+  .refine((ids) => new Set(ids).size === ids.length, "Select each model only once.");
+const comparisonRequest = comparisonDraft.min(MIN_COMPARISON_MODELS);
+
+export function parseComparisonParams(params: { size: number; get(name: string): string | null }, allowDraft = false) {
+  const value = params.get("ids");
+  const ids = params.size === 1 && value !== null ? value.split(",")
+    : params.size === 0 && allowDraft ? [] : undefined;
+  return (allowDraft ? comparisonDraft : comparisonRequest).safeParse(ids);
+}
 
 const catalogQuery = z.strictObject({
   q: searchText.optional(),

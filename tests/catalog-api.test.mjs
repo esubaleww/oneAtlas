@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import process from "node:process";
 import { test } from "node:test";
-import { URL } from "node:url";
+import { URL, URLSearchParams } from "node:url";
 
 const baseUrl = process.env.CATALOG_TEST_BASE_URL ?? "http://localhost:3000";
 
@@ -211,4 +211,41 @@ test("searches models, labs, and providers with bounded literal matches", async 
   ]) {
     assert.equal((await request(path, 400)).error.code, "INVALID_REQUEST");
   }
+});
+
+test("compares two to four models in URL order with a consistent pricing provider", async () => {
+  const ids = ["cedar-research-embed", "tidal-intelligence-starter", "cedar-research-general", "cedar-research-starter"];
+  const { data: pair } = await request(`/api/compare?${new URLSearchParams({ ids: ids.slice(0, 2).join(",") })}`);
+  assert.deepEqual(pair.models.map(({ slug }) => slug), ids.slice(0, 2));
+
+  const { data: comparison } = await request(`/api/compare?ids=${ids.join(",")}`);
+  assert.deepEqual(comparison.models.map(({ slug }) => slug), ids);
+  const [embedding, unknown, general, free] = comparison.models;
+  const selectedOffering = (model) => model.offerings.find(({ provider }) => provider.slug === model.pricingProviderSlug);
+
+  assert.equal(general.pricingProviderSlug, "canopy-inference");
+  assert.equal(selectedOffering(general).inputPrice, "0.650000");
+  assert.equal(selectedOffering(general).outputPrice, "3.400000");
+  assert.equal(selectedOffering(general).currency, "USD");
+  assert.equal(selectedOffering(general).billingUnit, "PER_MILLION_TOKENS");
+  assert.equal(general.offerings.find(({ provider }) => provider.slug === "relay-cloud").outputPrice, "3.200000");
+  assert(general.benchmarks.every(({ benchmark, isDemo }) => benchmark.version && isDemo));
+  assert.equal(general.benchmarks.length, 2);
+
+  assert.equal(embedding.type, "EMBEDDING");
+  assert.equal(selectedOffering(embedding).outputPrice, null);
+  assert.equal(selectedOffering(unknown).inputPrice, null);
+  assert.equal(unknown.contextWindow, null);
+  assert.deepEqual(unknown.benchmarks, []);
+  assert.equal(selectedOffering(free).inputPrice, "0.000000");
+  assert.equal(selectedOffering(free).outputPrice, "0.000000");
+});
+
+test("rejects invalid comparison selections and reports unavailable models", async () => {
+  for (const query of ["", "ids=", "ids=cedar-research-general", "ids=a,b,c,d,e", "ids=a,a", "ids=Invalid,a", "ids=a&ids=b", "ids=a,b&foo=bar"]) {
+    const { error } = await request(`/api/compare?${query}`, 400);
+    assert.equal(error.code, "INVALID_REQUEST");
+    assert(error.issues.length > 0);
+  }
+  assert.equal((await request("/api/compare?ids=cedar-research-general,missing-model", 404)).error.code, "NOT_FOUND");
 });

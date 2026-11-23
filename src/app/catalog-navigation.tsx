@@ -3,15 +3,19 @@
 import Form from "next/form";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { comparisonHref } from "../catalog/comparison";
+import { useComparison } from "./compare/comparison-selection";
 
 const sections = [
   { href: "/", label: "Models" },
+  { href: "/compare", label: "Compare" },
   { href: "/labs", label: "Labs" },
   { href: "/providers", label: "Providers" },
 ] as const;
 
 export function CatalogNavigation() {
   const pathname = usePathname();
+  const { models } = useComparison();
 
   return (
     <nav aria-label="Main navigation" className="ml-auto flex shrink-0 items-center gap-1 md:ml-0 md:gap-2">
@@ -22,7 +26,7 @@ export function CatalogNavigation() {
         return (
           <Link
             key={href}
-            href={href}
+            href={href === "/compare" && !active ? comparisonHref(models.map(({ slug }) => slug)) : href}
             aria-current={pathname === href ? "page" : active ? "location" : undefined}
             className={`rounded-md px-1.5 py-2 text-xs font-medium transition-colors sm:px-2.5 sm:text-sm ${active ? "bg-accent-soft text-accent" : "text-muted hover:bg-panel hover:text-accent"}`}
           >
