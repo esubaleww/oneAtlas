@@ -30,6 +30,10 @@ Use this path if your terminal cannot reach Neon on port `5432`.
 3. In **Deployments**, redeploy the latest **Production** deployment or check the deployment triggered by your next push to `main`. The command stops on the first failure. In **Build Logs**, look for a successful migration and the `Inserted demo records` summary. A repeat seed can report zero inserts when the demo records are already present. [Vercel redeploy guide](https://vercel.com/docs/deployments/managing-deployments#redeploy-a-project)
 4. Once the deployment is **Ready** and the public catalog loads, turn **Build Command → Override** off. Vercel will use the repository's usual `npm run build` on future deployments.
 
+#### Recover from Prisma error `P3005`
+
+This error means the target schema already contains objects when Prisma tries to apply the initial migration. For a fresh demo, create an empty `oneatlas` database on the same Neon branch and keep the existing database intact. Select `oneatlas` in Neon's Connect dialog and save its pooled and direct URLs in the two Production variables before triggering the next build. For an existing OneAtlas database with data to retain, compare its schema with the committed migration before baselining it. [Create a Neon database](https://neon.com/docs/manage/databases#create-a-database) · [Prisma baselining guide](https://pris.ly/d/migrate-baseline)
+
 ### From PowerShell
 
 Use an already installed checkout of the deployed commit. In Neon’s Connect dialog, confirm the selected branch and database before copying the direct URL. From the repository root in PowerShell 7, supply that URL to the masked prompt. The snippet restores the shell’s previous connection setting after the commands finish. [Prisma migration command](https://www.prisma.io/docs/orm/v7/prisma-client/deployment/deploy-database-changes-with-prisma-migrate)
