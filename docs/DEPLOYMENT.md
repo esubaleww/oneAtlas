@@ -16,6 +16,22 @@ The target is the `main` branch of `esubaleww/oneAtlas` on Vercel with Neon Post
 
 ## Apply the production migration and seed
 
+### From a Vercel build
+
+Use this path if your terminal cannot reach Neon on port `5432`.
+
+1. In **Settings → Environment Variables**, verify that **Production** has the pooled `DATABASE_URL` and add `DATABASE_URL_UNPOOLED` with the direct URL for the same Neon database.
+2. In **Settings → Build and Deployment → Framework Settings**, enable **Build Command → Override**, paste the command below, and save it. [Vercel build settings](https://vercel.com/docs/builds/configure-a-build#build-command)
+
+   ```sh
+   npm run db:migrate && npm run db:seed && npm run build
+   ```
+
+3. In **Deployments**, redeploy the latest **Production** deployment or check the deployment triggered by your next push to `main`. The command stops on the first failure. In **Build Logs**, look for a successful migration and the `Inserted demo records` summary. A repeat seed can report zero inserts when the demo records are already present. [Vercel redeploy guide](https://vercel.com/docs/deployments/managing-deployments#redeploy-a-project)
+4. Once the deployment is **Ready** and the public catalog loads, turn **Build Command → Override** off. Vercel will use the repository's usual `npm run build` on future deployments.
+
+### From PowerShell
+
 Use an already installed checkout of the deployed commit. In Neon’s Connect dialog, confirm the selected branch and database before copying the direct URL. From the repository root in PowerShell 7, supply that URL to the masked prompt. The snippet restores the shell’s previous connection setting after the commands finish. [Prisma migration command](https://www.prisma.io/docs/orm/v7/prisma-client/deployment/deploy-database-changes-with-prisma-migrate)
 
 ```powershell
@@ -39,7 +55,7 @@ An empty database receives 30 demo models, five labs, five providers, 40 offerin
 
 ## Verify the public deployment
 
-1. Redeploy after saving the production environment variable. In Vercel, confirm the Production deployment is **Ready** and points to the intended `main` commit. Copy the actual production URL from that deployment.
+1. In Vercel, confirm the deployment created after saving the production environment variables is **Ready** and points to the intended `main` commit. Copy its production URL.
 2. Open the URL in a signed-out window. Confirm the explorer shows 30 models. Check that `<production-url>/api/models?pageSize=1` returns JSON with `data.pagination.total` equal to `30`.
 3. Verify that a filtered explorer URL survives reload. Open Cedar Research General and return to the same filters. Open a two-model comparison and refresh it. Switch between two rankings benchmarks and open a lab and a provider profile. Confirm `/models/missing-model` returns HTTP 404 with a recovery link.
 4. Run the existing suites against the copied production URL from PowerShell. Run the documented Chromium install first if needed. [Test setup](../README.md#verify)
