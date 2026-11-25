@@ -71,6 +71,9 @@
 - Verified a fresh migration and two seed runs in a temporary PostgreSQL database. The second run inserted zero records, and all six catalog table snapshots matched.
 - All 16 HTTP integration tests, 12 browser tests, lint, type checking, and the production build passed. The final browser run completed without the catalog transaction timeout seen during the initial overlapping checks.
 
-## Next · Module 10 delivery
+## Module 10 · Delivery
 
-Start after the learning checkpoint. Deploy and smoke test the public app and database, then prepare the final project documentation, Loom walkthrough outline, and submission checklist.
+- Updated the README with the product walkthrough, request flow, schema relationships, setup commands, and verification results. Added the [deployment guide](DEPLOYMENT.md), [eight-minute Loom outline](LOOM_OUTLINE.md), and [submission checklist](SUBMISSION_CHECKLIST.md).
+- Installed the lockfile and built the app from a clean source archive with no `.env` or database credentials. Lint and type checking passed. The resulting production build passed all 16 HTTP tests and 12 browser tests against the seeded Docker PostgreSQL database.
+- Verified that the GitHub repository is public. Prefilled the repository in Vercel’s import flow. The browser prompted for GitHub sign-in, and the local Vercel CLI reported that it was logged out.
+- Hosted deployment is pending account access. The next step is to complete Vercel sign-in, then provision Neon, apply the production migration and seed, and verify the public URL. The Loom URL remains a field for the submitter’s recording.
