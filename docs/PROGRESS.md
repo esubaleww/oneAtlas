@@ -63,6 +63,14 @@
 - Reported and demo scores have independent rankings. Models without a score are counted separately. The existing seed remains demo-only and the module requires no schema migration.
 - All 16 HTTP integration tests, lint, type checking, and the production build passed. Chrome verified filter changes, URL reload and history, keyboard navigation, retry states, and layouts at 320 px and 390 px. A temporary PostgreSQL database verified mixed-source separation and the empty-score state.
 
-## Next · Module 9 quality
+## Module 9 · Quality
 
-Start after the learning checkpoint. Add focused automated coverage for the key catalog journeys and review responsive behavior and accessibility across the app.
+- Added a repeatable Playwright suite for discovery and details, comparison, rankings, global search and directories, and catalog retry and empty states. The suite uses the seeded PostgreSQL catalog and runs in desktop and mobile Chromium.
+- Added keyboard checks, axe scans across ten screens, and a 320 px mobile overflow check. Browser artifacts are excluded from Git and linting. The README documents setup, targeting a running instance, and viewing reports.
+- Fixed the active Compare navigation link so it preserves the selected models in the current URL. The browser regression check reopens a shared link and confirms that clicking Compare preserves the selection.
+- Verified a fresh migration and two seed runs in a temporary PostgreSQL database. The second run inserted zero records, and all six catalog table snapshots matched.
+- All 16 HTTP integration tests, 12 browser tests, lint, type checking, and the production build passed. The final browser run completed without the catalog transaction timeout seen during the initial overlapping checks.
+
+## Next · Module 10 delivery
+
+Start after the learning checkpoint. Deploy and smoke test the public app and database, then prepare the final project documentation, Loom walkthrough outline, and submission checklist.

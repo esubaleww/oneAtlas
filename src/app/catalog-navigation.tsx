@@ -3,6 +3,7 @@
 import Form from "next/form";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { comparisonHref } from "../catalog/comparison";
 import { useComparison } from "./compare/comparison-selection";
 
@@ -14,6 +15,11 @@ const sections = [
   { href: "/providers", label: "Providers" },
 ] as const;
 
+function CurrentComparisonLink({ label, className }: { label: string; className: string }) {
+  const query = useSearchParams().toString();
+  return <Link href={query ? `/compare?${query}` : "/compare"} aria-current="page" className={className}>{label}</Link>;
+}
+
 export function CatalogNavigation() {
   const pathname = usePathname();
   const { models } = useComparison();
@@ -24,12 +30,21 @@ export function CatalogNavigation() {
         const active = href === "/"
           ? pathname === "/" || pathname.startsWith("/models/")
           : pathname === href || pathname.startsWith(href + "/");
+        const className = `rounded-md px-1.5 py-2 text-xs font-medium transition-colors sm:px-2.5 sm:text-sm ${active ? "bg-accent-soft text-accent" : "text-muted hover:bg-panel hover:text-accent"}`;
+        if (href === "/compare" && active) {
+          return (
+            <Suspense key={href} fallback={<span aria-current="page" className={className}>{label}</span>}>
+              <CurrentComparisonLink label={label} className={className} />
+            </Suspense>
+          );
+        }
+
         return (
           <Link
             key={href}
-            href={href === "/compare" && !active ? comparisonHref(models.map(({ slug }) => slug)) : href}
+            href={href === "/compare" ? comparisonHref(models.map(({ slug }) => slug)) : href}
             aria-current={pathname === href ? "page" : active ? "location" : undefined}
-            className={`rounded-md px-1.5 py-2 text-xs font-medium transition-colors sm:px-2.5 sm:text-sm ${active ? "bg-accent-soft text-accent" : "text-muted hover:bg-panel hover:text-accent"}`}
+            className={className}
           >
             {label}
           </Link>

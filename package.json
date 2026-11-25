@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "test:catalog": "node --test tests/catalog-api.test.mjs",
+    "test:e2e": "playwright test",
     "build": "next build --webpack",
     "start": "next start",
     "db:generate": "prisma generate",
@@ -30,8 +31,10 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.1",
     "@eslint/js": "10.0.1",
     "@next/eslint-plugin-next": "16.4.6",
+    "@playwright/test": "1.65.1",
     "@tailwindcss/postcss": "4.3.5",
     "@types/node": "24.19.2",
     "@types/react": "19.3.0",

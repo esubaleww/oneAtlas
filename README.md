@@ -58,6 +58,16 @@ npm start
 
 With the seeded database and app running, run `npm run test:catalog` to verify the catalog endpoints, global search, directory pages, comparisons, benchmark rankings, and HTTP 404 responses. [API contract and examples](docs/API.md)
 
+For browser tests, keep Docker PostgreSQL running with the demo seed. Install Playwright’s pinned Chromium browser once, build the app, and run the suite.
+
+```sh
+npx playwright install chromium --only-shell
+npm run build
+npm run test:e2e
+```
+
+The browser runner starts the production build on port `3100`. Set `CATALOG_TEST_BASE_URL` to target an already running instance with the demo seed. The suite runs in desktop and mobile Chromium, with axe accessibility scans and a 320 px overflow check. Run `npm run test:e2e -- --project=mobile` for just the mobile project, or `npx playwright show-report` to review the last browser run. [Playwright accessibility testing](https://playwright.dev/docs/accessibility-testing)
+
 ## Stack and project notes
 
 - Node.js 24, Next.js 16.4.6 (App Router), and React 19.3.1.
