@@ -2,9 +2,7 @@
 
 OneAtlas is a full-stack AI model catalog. It helps developers find models by capability, compare what providers charge, and interpret scores from individual benchmarks.
 
-[GitHub repository](https://github.com/esubaleww/oneAtlas) · [Deployment guide](docs/DEPLOYMENT.md) · [Submission checklist](docs/SUBMISSION_CHECKLIST.md)
-
-The public app URL is pending hosting sign-in and verification. The local demo runs on [localhost:3000](http://localhost:3000).
+[Live OneAtlas app](https://oneatlas-eosin.vercel.app/) · [GitHub repository](https://github.com/esubaleww/oneAtlas) · [Deployment guide](docs/DEPLOYMENT.md) · [Submission checklist](docs/SUBMISSION_CHECKLIST.md)
 
 ## Run locally
 
@@ -98,7 +96,7 @@ npm run test:e2e
 
 The browser runner starts the production build on port `3100`. Set `CATALOG_TEST_BASE_URL` to target an already running instance with the demo seed. The suite runs in desktop and mobile Chromium, with axe accessibility scans and a 320 px overflow check. Run `npm run test:e2e -- --project=mobile` for just the mobile project, or `npx playwright show-report` to review the last browser run. [Playwright accessibility testing](https://playwright.dev/docs/accessibility-testing)
 
-Local verification passed with 16 HTTP tests, 12 browser tests, lint, type checking, and a production build. Applying the migration to an empty PostgreSQL database and running the seed twice produced identical data on the second run. [Verification log](docs/PROGRESS.md)
+Local verification passed with 16 HTTP tests, 12 browser tests, lint, type checking, and a production build. Applying the migration to an empty PostgreSQL database and running the seed twice produced identical data on the second run. All 16 HTTP tests and 12 browser tests also passed against the public deployment. [Verification log](docs/PROGRESS.md)
 
 ## Stack and project notes
 
