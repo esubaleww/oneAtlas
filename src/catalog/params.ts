@@ -47,7 +47,7 @@ const catalogQuery = z.strictObject({
 
 export type CatalogQuery = z.infer<typeof catalogQuery>;
 
-export function parseCatalogQuery(params: URLSearchParams) {
+function queryValues(params: URLSearchParams, repeatedKey?: string) {
   const values = new Map<string, string[]>();
   for (const [key, value] of params) {
     const entries = values.get(key) ?? [];
@@ -55,11 +55,30 @@ export function parseCatalogQuery(params: URLSearchParams) {
     values.set(key, entries);
   }
 
-  const input = Object.fromEntries(
+  return Object.fromEntries(
     Array.from(values, ([key, entries]) => [
       key,
-      key === "capability" || entries.length > 1 ? entries : entries[0],
+      key === repeatedKey || entries.length > 1 ? entries : entries[0],
     ]),
   );
-  return catalogQuery.safeParse(input);
+}
+
+export function parseCatalogQuery(params: URLSearchParams) {
+  return catalogQuery.safeParse(queryValues(params, "capability"));
+}
+
+const rankingSelection = z.strictObject({
+  benchmark: catalogSlug.optional(),
+  category: z.enum(ModelType).optional(),
+});
+const rankingsQuery = rankingSelection.required({ benchmark: true });
+
+export type RankingsQuery = z.infer<typeof rankingsQuery>;
+
+export function parseRankingSelection(params: URLSearchParams) {
+  return rankingSelection.safeParse(queryValues(params));
+}
+
+export function parseRankingsQuery(params: URLSearchParams) {
+  return rankingsQuery.safeParse(queryValues(params));
 }

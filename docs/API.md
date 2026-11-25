@@ -13,6 +13,8 @@ Start the database, apply the migrations, seed the demo catalog, and run the app
 | `GET /api/providers/[slug]` | One provider and its offerings, including the model, creator, rates, billing unit, and provider context. |
 | `GET /api/search?q=…` | `{ models, labs, providers }`. Each group contains up to five hits with their slug, name, description, and demo flag. |
 | `GET /api/compare?ids=…` | `{ models }` in the requested order. Each item has the model detail fields plus a `pricingProviderSlug`, which is `null` if the model has no offerings. |
+| `GET /api/benchmarks` | Benchmark definitions ordered by name and version, including categories, descriptions, methodology, units, and scoring directions. |
+| `GET /api/rankings?benchmark=…&category=…` | `{ benchmark, reported, demo, unrankedCount }` for one benchmark version and model category. |
 
 `GET /api/models` accepts the parameters below. Supply each parameter once except for `capability`.
 
@@ -36,11 +38,19 @@ curl.exe "http://localhost:3000/api/catalog-filters"
 curl.exe "http://localhost:3000/api/providers/relay-cloud"
 curl.exe "http://localhost:3000/api/search?q=compact"
 curl.exe "http://localhost:3000/api/compare?ids=cedar-research-general,cedar-research-embed"
+curl.exe "http://localhost:3000/api/benchmarks"
+curl.exe "http://localhost:3000/api/rankings?benchmark=demo-first-token-latency-v1&category=TEXT_GENERATION"
 ```
 
 Global search requires one `q` of 1 to 100 characters after trimming. It matches a literal case-insensitive substring in names and descriptions. Exact names rank first, followed by name prefixes, then other matches. Name and slug break ties within each group.
 
 Comparison requires exactly one `ids` parameter with two to four distinct comma-separated model slugs. Each slug follows the same rules as a model detail slug. A valid selection with a missing model returns `404 NOT_FOUND` for the whole request. The comparison page preserves column order in its URL and groups displayed scores by benchmark version and demo status.
+
+## Benchmark rankings
+
+Supply exactly one `benchmark` slug. The optional `category` accepts `TEXT_GENERATION` or `EMBEDDING` and defaults to the benchmark’s category. A benchmark that is missing or belongs to a different category returns `404 NOT_FOUND`. Duplicate and unsupported parameters return `400 INVALID_REQUEST`.
+
+Each leaderboard entry has `rank`, `value`, `model` (with its lab), `sourceLabel`, `sourceUrl`, `measuredOn`, and `isDemo`. `reported` and `demo` are ranked independently in the benchmark’s scoring direction. Equal stored values share a rank, so two first-place scores are followed by rank 3. Within a tie, model slug ascending gives a stable display order. `unrankedCount` counts category models with no score on the selected benchmark. The seeded database contains synthetic scores, so its `reported` arrays are empty.
 
 ## Price selection and sorting
 
@@ -52,6 +62,6 @@ Rates are decimal strings with six fractional digits. A rate of `"0.000000"` is 
 
 ## Errors and checks
 
-Failed catalog GET requests use `{ error: { code, message, issues? } }`. Invalid parameters yield `400 INVALID_REQUEST` and may include field-level issues. A valid slug with no matching model, lab, or provider yields `404 NOT_FOUND`. Recognized connection failures yield `503 SERVICE_UNAVAILABLE`. Other unexpected failures yield `500 INTERNAL_ERROR`.
+Failed catalog GET requests use `{ error: { code, message, issues? } }`. Invalid parameters yield `400 INVALID_REQUEST` and may include field-level issues. A valid slug with no matching model, lab, provider, or benchmark yields `404 NOT_FOUND`. Recognized connection failures yield `503 SERVICE_UNAVAILABLE`. Other unexpected failures yield `500 INTERNAL_ERROR`.
 
-With the demo catalog and app running, use `npm run test:catalog` to exercise the HTTP endpoints. Set `CATALOG_TEST_BASE_URL` to use a different local port. The suite checks the 30-model seed, combined filters, representative and provider-specific rates, stable pagination, benchmark details, directory relationships, bounded global search, comparison ordering and validation, and HTTP 404 responses for unknown slugs.
+With the demo catalog and app running, use `npm run test:catalog` to exercise the HTTP endpoints. Set `CATALOG_TEST_BASE_URL` to use a different local port. The suite checks the 30-model seed, combined filters, representative and provider-specific rates, stable pagination, benchmark details, directory relationships, bounded global search, comparison ordering and validation, rankings and ties, and HTTP 404 responses for unknown slugs.

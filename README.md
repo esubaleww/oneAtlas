@@ -21,6 +21,8 @@ Use **Labs** to browse model creators and their releases, or **Providers** to br
 
 Select two to four models using the **Compare** controls in the explorer or on model detail pages. Open the comparison from the tray to review specifications, provider rates, and benchmark results side by side. Add or remove models on the comparison page and use **Copy link** to share the current selection. [Example comparison](http://localhost:3000/compare?ids=cedar-research-general%2Ccedar-research-embed)
 
+Open **Rankings** and choose a model category and benchmark. The page shows the benchmark’s scoring direction, methodology, and result sources. Equal scores share a rank, and the seeded scores appear in a dedicated demo leaderboard. Share the current selection by copying the page URL. [Example rankings](http://localhost:3000/rankings?category=TEXT_GENERATION&benchmark=demo-first-token-latency-v1)
+
 ## Start and seed PostgreSQL
 
 Use Docker Desktop with the Linux engine running. From the repository root in PowerShell, copy the local connection settings and start the database.
@@ -54,7 +56,7 @@ npm start
 
 `typecheck` generates the App Router types before running TypeScript. `start` serves the production build. Visit `/` for the explorer and `/missing-page` for the 404 screen.
 
-With the seeded database and app running, run `npm run test:catalog` to verify the catalog endpoints, global search, directory pages, comparisons, and HTTP 404 responses. [API contract and examples](docs/API.md)
+With the seeded database and app running, run `npm run test:catalog` to verify the catalog endpoints, global search, directory pages, comparisons, benchmark rankings, and HTTP 404 responses. [API contract and examples](docs/API.md)
 
 ## Stack and project notes
 

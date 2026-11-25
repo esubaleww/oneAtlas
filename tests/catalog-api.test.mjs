@@ -249,3 +249,56 @@ test("rejects invalid comparison selections and reports unavailable models", asy
   }
   assert.equal((await request("/api/compare?ids=cedar-research-general,missing-model", 404)).error.code, "NOT_FOUND");
 });
+
+test("lists versioned benchmark definitions with category, unit, and scoring direction", async () => {
+  const { data: benchmarks } = await request("/api/benchmarks");
+  assert.deepEqual(benchmarks.map(({ slug, category, unit, direction }) => [slug, category, unit, direction]), [
+    ["demo-first-token-latency-v1", "TEXT_GENERATION", "ms", "LOWER_IS_BETTER"],
+    ["demo-instruction-following-v1", "TEXT_GENERATION", "%", "HIGHER_IS_BETTER"],
+    ["demo-retrieval-recall-v1", "EMBEDDING", "%", "HIGHER_IS_BETTER"],
+  ]);
+  assert(benchmarks.every(({ description, protocol, version }) => description && protocol && version === "1.0"));
+});
+
+test("ranks in the benchmark's direction, keeps decimal ties, and excludes models without scores", async () => {
+  const { data: scores } = await request("/api/rankings?benchmark=demo-instruction-following-v1&category=TEXT_GENERATION");
+  const { data: latency } = await request("/api/rankings?benchmark=demo-first-token-latency-v1");
+  const { data: recall } = await request("/api/rankings?benchmark=demo-retrieval-recall-v1&category=EMBEDDING");
+
+  for (const { reported, demo, unrankedCount } of [scores, latency]) {
+    assert.deepEqual(reported, []);
+    assert.equal(demo.length, 20);
+    assert.equal(unrankedCount, 5);
+    assert(demo.every(({ isDemo, model, sourceLabel, measuredOn }) =>
+      isDemo && model.isDemo && model.lab.name && !model.slug.endsWith("-starter") &&
+      sourceLabel === "OneAtlas synthetic fixture" && measuredOn === "2026-10-01",
+    ));
+  }
+
+  const values = ({ demo }) => demo.map(({ value }) => Number(value));
+  assert.deepEqual(values(scores), values(scores).toSorted((a, b) => b - a));
+  assert.deepEqual(values(latency), values(latency).toSorted((a, b) => a - b));
+  assert.deepEqual(scores.demo.slice(0, 5).map(({ rank, value }) => [rank, value]), [
+    [1, "91.0000"], [1, "91.0000"], [3, "90.0000"], [3, "90.0000"], [3, "90.0000"],
+  ]);
+  const tiedSlugs = scores.demo.slice(2, 5).map(({ model }) => model.slug);
+  assert.deepEqual(tiedSlugs, tiedSlugs.toSorted());
+  assert.equal(latency.demo[0].value, "205.0000");
+  assert.equal(latency.demo[0].model.slug, "cedar-research-compact");
+  assert.equal(recall.benchmark.category, "EMBEDDING");
+  assert.equal(recall.demo.length, 5);
+  assert.equal(recall.unrankedCount, 0);
+  assert(recall.demo.every(({ model }) => model.slug.endsWith("-embed")));
+});
+
+test("rejects invalid ranking parameters and missing benchmark selections", async () => {
+  const benchmark = "demo-instruction-following-v1";
+  for (const query of ["", "benchmark=Invalid", `benchmark=${benchmark}&category=VISION`, `benchmark=${benchmark}&benchmark=${benchmark}`, `benchmark=${benchmark}&category=TEXT_GENERATION&category=EMBEDDING`, `benchmark=${benchmark}&extra=1`]) {
+    const { error } = await request(`/api/rankings?${query}`, 400);
+    assert.equal(error.code, "INVALID_REQUEST");
+    assert(error.issues.length > 0);
+  }
+  assert.equal((await request("/api/benchmarks?category=TEXT_GENERATION", 400)).error.code, "INVALID_REQUEST");
+  assert.equal((await request("/api/rankings?benchmark=missing-test", 404)).error.code, "NOT_FOUND");
+  assert.equal((await request(`/api/rankings?benchmark=${benchmark}&category=EMBEDDING`, 404)).error.code, "NOT_FOUND");
+});

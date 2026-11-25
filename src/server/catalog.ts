@@ -1,7 +1,7 @@
 import "server-only";
 
-import type { CatalogQuery } from "../catalog/params";
-import { Prisma, type ModelOffering } from "../generated/prisma/client";
+import type { CatalogQuery, RankingsQuery } from "../catalog/params";
+import { Prisma, type BenchmarkResult, type ModelOffering } from "../generated/prisma/client";
 import type { Capability } from "../generated/prisma/enums";
 import { getDb } from "./db";
 
@@ -38,8 +38,32 @@ const modelFields = {
   maxOutputTokens: true,
 } as const satisfies Prisma.ModelSelect;
 
+const benchmarkFields = {
+  slug: true,
+  name: true,
+  description: true,
+  version: true,
+  protocol: true,
+  unit: true,
+  category: true,
+  direction: true,
+} as const satisfies Prisma.BenchmarkSelect;
+
+const benchmarkResultFields = {
+  value: true,
+  sourceLabel: true,
+  sourceUrl: true,
+  measuredOn: true,
+  isDemo: true,
+} as const satisfies Prisma.BenchmarkResultSelect;
+
 function dateOnly(value: Date | null) {
   return value?.toISOString().slice(0, 10) ?? null;
+}
+
+function serializeBenchmarkResult<T extends Pick<BenchmarkResult, "value" | "measuredOn">>(result: T) {
+  const { value, measuredOn, ...fields } = result;
+  return { ...fields, value: value.toFixed(4), measuredOn: dateOnly(measuredOn) };
 }
 
 function serializeOffering<T extends Pick<ModelOffering, "inputPrice" | "outputPrice">>(offering: T) {
@@ -194,23 +218,8 @@ const modelDetailFields = {
   results: {
     orderBy: { benchmarkSlug: "asc" },
     select: {
-      benchmark: {
-        select: {
-          slug: true,
-          name: true,
-          description: true,
-          version: true,
-          protocol: true,
-          unit: true,
-          category: true,
-          direction: true,
-        },
-      },
-      value: true,
-      sourceLabel: true,
-      sourceUrl: true,
-      measuredOn: true,
-      isDemo: true,
+      benchmark: { select: benchmarkFields },
+      ...benchmarkResultFields,
     },
   },
 } as const satisfies Prisma.ModelSelect;
@@ -225,11 +234,7 @@ function serializeModelDetail(model: Prisma.ModelGetPayload<{ select: typeof mod
       ...serializeOffering(offering),
       retrievedOn: dateOnly(offering.retrievedOn),
     })),
-    benchmarks: results.map((result) => ({
-      ...result,
-      value: result.value.toFixed(4),
-      measuredOn: dateOnly(result.measuredOn),
-    })),
+    benchmarks: results.map(serializeBenchmarkResult),
   };
 }
 
@@ -262,6 +267,54 @@ export async function getComparison(ids: string[]): Promise<ComparisonData | nul
   }
   return { models };
 }
+
+export function listBenchmarks() {
+  return getDb().benchmark.findMany({
+    orderBy: [{ name: "asc" }, { version: "asc" }],
+    select: benchmarkFields,
+  });
+}
+
+export function getRankings(query: RankingsQuery) {
+  return getDb().$transaction(async (tx) => {
+    const benchmark = await tx.benchmark.findUnique({
+      where: { slug: query.benchmark, category: query.category },
+      select: benchmarkFields,
+    });
+    if (!benchmark) return null;
+
+    const results = await tx.benchmarkResult.findMany({
+      where: { benchmarkSlug: benchmark.slug, model: { type: benchmark.category } },
+      orderBy: [{ value: benchmark.direction === "HIGHER_IS_BETTER" ? "desc" : "asc" }, { modelSlug: "asc" }],
+      select: {
+        ...benchmarkResultFields,
+        model: { select: { ...organizationFields, lab: { select: organizationFields } } },
+      },
+    });
+    const totalModels = await tx.model.count({ where: { type: benchmark.category } });
+
+    function rankGroup(group: typeof results) {
+      let previous: string | undefined;
+      let rank = 0;
+      return group.map((result, index) => {
+        const entry = serializeBenchmarkResult(result);
+        if (entry.value !== previous) rank = index + 1;
+        previous = entry.value;
+        return { ...entry, rank };
+      });
+    }
+
+    return {
+      benchmark,
+      reported: rankGroup(results.filter((result) => !result.isDemo)),
+      demo: rankGroup(results.filter((result) => result.isDemo)),
+      unrankedCount: totalModels - results.length,
+    };
+  }, { isolationLevel: "RepeatableRead" });
+}
+
+export type BenchmarkDefinition = Awaited<ReturnType<typeof listBenchmarks>>[number];
+export type RankingsData = NonNullable<Awaited<ReturnType<typeof getRankings>>>;
 
 export async function getCatalogFilters() {
   const db = getDb();

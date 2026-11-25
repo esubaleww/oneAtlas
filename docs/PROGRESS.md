@@ -56,6 +56,13 @@
 - The comparison table shows specifications, modalities, capabilities, providers, and benchmark versions and scores. It distinguishes free, unknown, inapplicable, and unavailable values and separates demo benchmark results from reported results.
 - All 13 catalog HTTP tests, lint, type checking, and the production build passed. Chrome verified selection, replacement, clipboard and URL sharing, browser history, errors and retry, and keyboard scrolling on the 320 px and 390 px layouts.
 
-## Next · Module 8 rankings
+## Module 8 · Benchmark rankings
 
-Start after the learning checkpoint. Add a leaderboard for a selected benchmark and model category, with the scoring direction, units, sources, ties, and demo labels visible.
+- Added `/api/benchmarks` for versioned definitions and `/api/rankings` for one benchmark and model category. Rankings use PostgreSQL’s decimal ordering in the benchmark’s scoring direction. Equal scores share a rank and display in model slug order.
+- Added the Rankings navigation and page. The category and benchmark filters are shareable through the URL. The page explains the benchmark’s version, unit, scoring direction, and methodology, and links each row to its model and available source.
+- Reported and demo scores have independent rankings. Models without a score are counted separately. The existing seed remains demo-only and the module requires no schema migration.
+- All 16 HTTP integration tests, lint, type checking, and the production build passed. Chrome verified filter changes, URL reload and history, keyboard navigation, retry states, and layouts at 320 px and 390 px. A temporary PostgreSQL database verified mixed-source separation and the empty-score state.
+
+## Next · Module 9 quality
+
+Start after the learning checkpoint. Add focused automated coverage for the key catalog journeys and review responsive behavior and accessibility across the app.

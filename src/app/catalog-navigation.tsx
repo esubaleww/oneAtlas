@@ -9,6 +9,7 @@ import { useComparison } from "./compare/comparison-selection";
 const sections = [
   { href: "/", label: "Models" },
   { href: "/compare", label: "Compare" },
+  { href: "/rankings", label: "Rankings" },
   { href: "/labs", label: "Labs" },
   { href: "/providers", label: "Providers" },
 ] as const;
@@ -18,7 +19,7 @@ export function CatalogNavigation() {
   const { models } = useComparison();
 
   return (
-    <nav aria-label="Main navigation" className="ml-auto flex shrink-0 items-center gap-1 md:ml-0 md:gap-2">
+    <nav aria-label="Main navigation" className="flex w-full shrink-0 flex-wrap items-center justify-between gap-1 sm:ml-auto sm:w-auto sm:justify-start md:ml-0 md:flex-nowrap md:gap-2">
       {sections.map(({ href, label }) => {
         const active = href === "/"
           ? pathname === "/" || pathname.startsWith("/models/")
